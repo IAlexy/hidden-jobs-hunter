@@ -9,6 +9,7 @@ import { PitchModal } from '../../src/components/PitchModal';
 import { SettingsModal } from '../../src/components/SettingsModal';
 import { ProfileManagerModal } from '../../src/components/ProfileManagerModal';
 import { JobOffer, StatsData, UserProfile } from '../../src/types';
+import { setGlobalLocale } from '../../src/i18n';
 import * as api from '../../src/api';
 
 vi.mock('../../src/api', () => ({
@@ -91,6 +92,7 @@ const sampleJob: JobOffer = {
 describe('UI Components Suite', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setGlobalLocale('fr');
   });
 
   it('Header renders stats, active profile and triggers navigation & actions', () => {
@@ -294,5 +296,53 @@ describe('UI Components Suite', () => {
     const countryInput = screen.getByLabelText('Pays de résidence') as HTMLInputElement;
     fireEvent.change(countryInput, { target: { value: 'Canada' } });
     expect(countryInput.value).toBe('Canada');
+  });
+
+  it('Switches UI language between French (FR) and English (EN) across components', () => {
+    const noop = vi.fn();
+
+    render(
+      <div>
+        <Header
+          activeTab="explorer"
+          setActiveTab={noop}
+          activeProfile={sampleProfile}
+          profiles={[sampleProfile]}
+          onSelectProfile={noop}
+          onOpenProfiles={noop}
+          onOpenSettings={noop}
+          onOpenIngest={noop}
+          onSync={noop}
+          isSyncing={false}
+          stats={sampleStats}
+        />
+        <JobCard
+          job={sampleJob}
+          onViewDetails={noop}
+          onOpenPitch={noop}
+          onUpdateStatus={noop}
+        />
+        <KanbanView
+          jobs={[sampleJob]}
+          onViewDetails={noop}
+          onOpenPitch={noop}
+          onUpdateStatus={noop}
+        />
+      </div>
+    );
+
+    // Initially in French
+    expect(screen.getByText('Scanner le radar')).toBeInTheDocument();
+    expect(screen.getByText('Sauvegardées & À contacter')).toBeInTheDocument();
+
+    // Switch language selector to English ('en')
+    const langSelect = screen.getByLabelText('Choisir la langue');
+    fireEvent.change(langSelect, { target: { value: 'en' } });
+
+    // Verify immediate English translation across Header, JobCard, and KanbanView
+    expect(screen.getByText('Scan radar')).toBeInTheDocument();
+    expect(screen.getByText('Pipeline & Tracker')).toBeInTheDocument();
+    expect(screen.getByText('AI Pitch')).toBeInTheDocument();
+    expect(screen.getByText('Saved & To Contact')).toBeInTheDocument();
   });
 });

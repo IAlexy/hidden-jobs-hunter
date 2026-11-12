@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ProfileTemplate, UserProfile } from '../types';
 import { createProfile, updateProfile, deleteProfile, activateProfile, parseCvWithAi, fetchProfileTemplates } from '../api';
+import { useI18n } from '../i18n';
 
 const FALLBACK_TEMPLATES: ProfileTemplate[] = [
   {
@@ -109,6 +110,7 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
   activeProfile,
   onRefreshProfiles,
 }) => {
+  const { t } = useI18n();
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(activeProfile?.id ?? null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [isParsingCv, setIsParsingCv] = useState(false);
@@ -273,16 +275,16 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
               <User className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-base">Gestionnaire de Profils & CV</h3>
+              <h3 className="font-bold text-white text-base">{t('profile.modalTitle')}</h3>
               <p className="text-xs text-slate-400">
-                Configurez votre profil ou ceux de vos amis pour filtrer et matcher les offres
+                {t('profile.modalSubtitle')}
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            aria-label="Fermer la modal"
+            aria-label={t('detail.closeAria')}
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
           >
             <X className="h-5 w-5" />
@@ -295,11 +297,11 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
           {/* Left Sidebar: Profile List */}
           <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-800 bg-slate-950/50 p-4 space-y-2 overflow-y-auto shrink-0">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Profils enregistrés</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{t('profile.savedProfiles')}</span>
               <button
                 onClick={handleStartNew}
                 className="p-1 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/40 rounded transition"
-                title="Ajouter un nouveau profil"
+                title={t('profile.createAnotherBtn')}
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -321,14 +323,14 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
                     <span className="text-xs font-bold text-white truncate">{p.name}</span>
                     {p.isActive && (
                       <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-semibold px-1.5 py-0.2 rounded border border-emerald-500/30 shrink-0">
-                        Actif
+                        {t('profile.activeBadge')}
                       </span>
                     )}
                   </div>
                   <p className="text-[11px] text-slate-400 truncate mb-2">{p.title}</p>
 
                   <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px]">
-                    <span className="text-slate-500">{p.yearsOfExperience} ans exp.</span>
+                    <span className="text-slate-500">{t('profile.yearsExpShort', { years: p.yearsOfExperience })}</span>
 
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
                       {!p.isActive && (
@@ -339,7 +341,7 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
                           }}
                           className="text-teal-400 hover:underline"
                         >
-                          Activer
+                          {t('profile.activateBtn')}
                         </button>
                       )}
                       {profiles.length > 1 && (
@@ -364,7 +366,7 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
               className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2.5 px-3 border border-dashed border-slate-700 hover:border-emerald-500/60 text-slate-300 hover:text-emerald-400 rounded-xl transition"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>Créer un autre profil</span>
+              <span>{t('profile.createAnotherBtn')}</span>
             </button>
           </div>
 
@@ -374,10 +376,10 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div>
                 <h4 className="font-bold text-white text-base">
-                  {isCreatingNew ? 'Nouveau Profil' : `Modifier: ${formData.name}`}
+                  {isCreatingNew ? t('profile.newProfileHeader') : t('profile.editProfileHeader', { name: formData.name || '' })}
                 </h4>
                 <p className="text-xs text-slate-400">
-                  Définissez vos critères de recherche (métier, compétences, pays de résidence, modalités remote)
+                  {t('profile.formSubtitle')}
                 </p>
               </div>
 
@@ -387,7 +389,7 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
                   className="flex items-center gap-1 text-xs font-semibold bg-teal-600/20 text-teal-300 border border-teal-500/30 px-3 py-1.5 rounded-lg hover:bg-teal-600/30 transition"
                 >
                   <Check className="h-3.5 w-3.5" />
-                  <span>Définir comme profil actif</span>
+                  <span>{t('profile.setAsActiveBtn')}</span>
                 </button>
               )}
             </div>
@@ -397,7 +399,7 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
                   <Briefcase className="h-3.5 w-3.5" />
-                  <span>Charger un modèle de métier (Template 1-clic) :</span>
+                  <span>{t('profile.templateLabel')}</span>
                 </span>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -423,7 +425,7 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                   <FileText className="h-4 w-4 text-indigo-400" />
-                  <span>Coller le CV ou un prompt de description</span>
+                  <span>{t('profile.cvLabel')}</span>
                 </label>
                 <button
                   onClick={handleParseCv}
@@ -431,7 +433,7 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
                   className="flex items-center gap-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition shadow-sm"
                 >
                   <Sparkles className={`h-3.5 w-3.5 ${isParsingCv ? 'animate-spin' : ''}`} />
-                  <span>{isParsingCv ? 'Analyse en cours...' : 'Extraire avec l\'IA'}</span>
+                  <span>{isParsingCv ? t('profile.parsingCv') : t('profile.parseWithAiBtn')}</span>
                 </button>
               </div>
               <textarea
@@ -594,7 +596,7 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
                 className="flex items-center gap-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl transition shadow-sm"
               >
                 <Save className="h-4 w-4" />
-                <span>{isSaving ? 'Enregistrement...' : 'Enregistrer le profil'}</span>
+                <span>{isSaving ? t('profile.saving') : t('profile.saveBtn')}</span>
               </button>
             </div>
 

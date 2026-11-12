@@ -7,6 +7,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { ingestAtsUrl } from '../api';
+import { useI18n } from '../i18n';
 
 interface IngestUrlModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface IngestUrlModalProps {
 }
 
 export const IngestUrlModal: React.FC<IngestUrlModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { t } = useI18n();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<{ extractedCount: number; newJobsAdded: number } | null>(null);
@@ -41,9 +43,9 @@ export const IngestUrlModal: React.FC<IngestUrlModalProps> = ({ isOpen, onClose,
   };
 
   const sampleUrls = [
-    { label: 'Exemple Ashby', url: 'https://jobs.ashbyhq.com/linear' },
-    { label: 'Exemple Greenhouse', url: 'https://boards.greenhouse.io/automattic' },
-    { label: 'Exemple Lever', url: 'https://jobs.lever.co/buffer' },
+    { label: t('ingest.exampleAshby'), url: 'https://jobs.ashbyhq.com/linear' },
+    { label: t('ingest.exampleGreenhouse'), url: 'https://boards.greenhouse.io/automattic' },
+    { label: t('ingest.exampleLever'), url: 'https://jobs.lever.co/buffer' },
   ];
 
   return (
@@ -57,16 +59,16 @@ export const IngestUrlModal: React.FC<IngestUrlModalProps> = ({ isOpen, onClose,
               <Link2 className="h-5 w-5 text-indigo-400" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-base">Scraper une page Carrière / ATS Direct</h3>
+              <h3 className="font-bold text-white text-base">{t('ingest.title')}</h3>
               <p className="text-xs text-slate-400">
-                Extrayez les postes directement depuis l'ATS d'une startup
+                {t('ingest.subtitle')}
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            aria-label="Fermer la modal"
+            aria-label={t('detail.closeAria')}
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
           >
             <X className="h-5 w-5" />
@@ -76,12 +78,12 @@ export const IngestUrlModal: React.FC<IngestUrlModalProps> = ({ isOpen, onClose,
         {/* Content */}
         <div className="p-6 space-y-4 text-xs text-slate-300">
           <p className="leading-relaxed">
-            Collez l'URL de la page carrière ou du job board direct d'une entreprise (Ashby, Greenhouse, Lever, ou site web standard). Le radar va aspirer les postes et les analyser par rapport à votre CV.
+            {t('ingest.description')}
           </p>
 
           <div>
             <label className="block text-slate-200 font-semibold mb-1.5">
-              URL Carrière ou ATS :
+              {t('ingest.urlLabel')}
             </label>
             <input
               type="url"
@@ -94,7 +96,7 @@ export const IngestUrlModal: React.FC<IngestUrlModalProps> = ({ isOpen, onClose,
 
           {/* Quick presets */}
           <div>
-            <span className="text-[11px] text-slate-400 block mb-1">Exemples de boards remote :</span>
+            <span className="text-[11px] text-slate-400 block mb-1">{t('ingest.examplesLabel')}</span>
             <div className="flex flex-wrap gap-1.5">
               {sampleUrls.map((s, idx) => (
                 <button
@@ -113,9 +115,9 @@ export const IngestUrlModal: React.FC<IngestUrlModalProps> = ({ isOpen, onClose,
             <div className="p-3.5 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-emerald-300 flex items-center gap-2.5">
               <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
               <div>
-                <strong>Scan terminé avec succès !</strong>
+                <strong>{t('ingest.scanSuccessTitle')}</strong>
                 <p className="text-[11px] text-slate-300">
-                  {result.extractedCount} offres détectées, dont {result.newJobsAdded} nouvelles ajoutées au radar et scorées.
+                  {t('ingest.scanSuccessStats', { extracted: result.extractedCount, added: result.newJobsAdded })}
                 </p>
               </div>
             </div>
@@ -136,7 +138,7 @@ export const IngestUrlModal: React.FC<IngestUrlModalProps> = ({ isOpen, onClose,
             onClick={onClose}
             className="text-xs font-medium text-slate-400 hover:text-slate-200 px-3 py-2 rounded-lg transition"
           >
-            Fermer
+            {t('ingest.closeBtn')}
           </button>
 
           <button
@@ -145,7 +147,7 @@ export const IngestUrlModal: React.FC<IngestUrlModalProps> = ({ isOpen, onClose,
             className="flex items-center gap-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition shadow-sm disabled:opacity-50"
           >
             <RotateCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>{isLoading ? 'Extraction en cours...' : 'Lancer l\'extraction'}</span>
+            <span>{isLoading ? t('ingest.extracting') : t('ingest.startBtn')}</span>
           </button>
         </div>
 

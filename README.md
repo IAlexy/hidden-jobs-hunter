@@ -25,6 +25,10 @@
 - **👥 Gestion Multi-Profils, Templates Métiers 1-Clic & Analyseur de CV IA** :
   - **Modèles de métiers prêts à l'emploi en 1 clic (`GET /api/profiles/templates`)** : Démarrez en 5 secondes avec un profil pré-configuré (*Fullstack Software Engineer*, *Data Scientist / AI Engineer*, *DevOps / Cloud Architect*, *Product Manager*, *UX/UI Product Designer*, *Growth & Digital Marketing*, *Cybersecurity / SecOps Engineer*).
   - Extraction automatique d'un CV brut (`POST /api/profiles/parse-resume`) renseignant le titre, le domaine, le pays, les années d'expérience, les compétences clés/secondaires et les langues.
+- **🌍 Internationalisation (i18n) Extensible (FR / EN + Multi-Langues)** :
+  - Sélecteur de langue instantané (**FR / EN**) dans l'en-tête avec persistance locale (`localStorage`).
+  - Architecture de dictionnaires typés (`frontend/src/i18n/`) permettant d'enregistrer dynamiquement de nouvelles langues via `registerLocale('es', dictionary, 'ES')`.
+  - Génération bilingue (**Français / Anglais**) des analyses de matching, forces, points de vigilance, faisabilité administrative et pitchs côté backend (`AiMatcherService`).
 - **🔌 Architecture IA Hybride (100 % Hors-Ligne par défaut)** :
   - Fonctionne **immédiatement sans aucune clé API** grâce au moteur algorithmique heuristique local.
   - Supporte **Google Gemini** (`gemini-2.5-flash`), **OpenAI** (`gpt-4o-mini`) et **Ollama** (modèles locaux `llama3`, `mistral`) avec basculement automatique (*fallback*) sur le moteur heuristique en cas d'indisponibilité réseau.

@@ -312,7 +312,7 @@ public class AiMatcherServiceTests
         var service = new AiMatcherService(httpClient);
         var settings = new AppSettings { AiProvider = "Heuristic" };
 
-        // 1. Data Scientist in Canada applying to a US/North-America AI role
+        // 1. Data Scientist in Canada applying to a US/North-America AI role (with English language preference)
         var dataProfileCanada = new UserProfile
         {
             Id = 2,
@@ -323,7 +323,8 @@ public class AiMatcherServiceTests
             YearsOfExperience = 6,
             PrimarySkills = "Python, PyTorch, LLM, RAG, Pandas, SQL, Machine Learning",
             SecondarySkills = "Snowflake, dbt, Docker, AWS",
-            Languages = "English (fluent), Français (native)"
+            Languages = "English (fluent), Français (native)",
+            PreferredPitchLanguage = "English"
         };
 
         var aiJob = new JobOffer
@@ -336,14 +337,17 @@ public class AiMatcherServiceTests
             Location = "US / Canada Only",
             RemoteScope = "US-Only",
             IsFranceCompatible = false,
-            Description = "Seeking a Senior Data Scientist experienced in Python, PyTorch, LLM, RAG, Pandas, SQL and Snowflake.",
-            Tags = "Python, PyTorch, LLM, Pandas, SQL"
+            Description = "Seeking a Senior Data Scientist experienced in Python, PyTorch, LLM, RAG, Pandas, SQL, Snowflake and TensorFlow.",
+            Tags = "Python, PyTorch, LLM, Pandas, SQL, TensorFlow"
         };
 
         var dataMatch = await service.EvaluateMatchAsync(aiJob, dataProfileCanada, settings);
         Assert.True(dataMatch.TechStackFit >= 85);
         Assert.Equal(92, dataMatch.RemoteEligibilityFit);
-        Assert.Contains("Canada", dataMatch.AdministrativeFeasibility, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("match based on your profile", dataMatch.Summary, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Excellent geographic compatibility (Canada)", dataMatch.AdministrativeFeasibility, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Strong skill alignment on:", dataMatch.StrengthsJson, StringComparison.Ordinal);
+        Assert.Contains("Requested skill not listed in profile: tensorflow", dataMatch.MissingSkillsJson, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Senior Data Scientist & AI Engineer", dataMatch.TailoredPitch, StringComparison.Ordinal);
         Assert.Contains("from Canada", dataMatch.TailoredPitch, StringComparison.Ordinal);
         Assert.DoesNotContain("Fullstack Software Engineer", dataMatch.TailoredPitch, StringComparison.Ordinal);

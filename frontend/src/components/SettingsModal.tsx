@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { AppSettings } from '../types';
 import { fetchSettings, updateSettings, testAiConnection } from '../api';
+import { useI18n } from '../i18n';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [geminiKeyInput, setGeminiKeyInput] = useState('');
   const [openAiKeyInput, setOpenAiKeyInput] = useState('');
@@ -53,7 +55,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       };
       const updated = await updateSettings(payload);
       setSettings(updated);
-      setTestResult({ success: true, message: 'Paramètres enregistrés avec succès !' });
+      setTestResult({ success: true, message: t('settings.savedSuccess') });
       setTimeout(() => setTestResult(null), 3000);
     } catch {
       alert('Erreur lors de l\'enregistrement des paramètres.');
@@ -95,16 +97,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <Settings className="h-5 w-5 text-slate-300" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-base">Configuration du Moteur IA & Sources</h3>
+              <h3 className="font-bold text-white text-base">{t('settings.title')}</h3>
               <p className="text-xs text-slate-400">
-                Personnalisez le fournisseur d'IA et les filtres d'importation
+                {t('settings.subtitle')}
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            aria-label="Fermer la modal"
+            aria-label={t('detail.closeAria')}
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
           >
             <X className="h-5 w-5" />
@@ -117,7 +119,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {/* Provider Selection */}
           <div className="space-y-3">
             <label className="text-xs font-bold text-slate-200 uppercase tracking-wider block">
-              Fournisseur d'IA pour le Matching & les Pitchs :
+              {t('settings.providerLabel')}
             </label>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -135,14 +137,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-bold text-white text-xs flex items-center gap-1.5">
                       <Cpu className="h-4 w-4 text-emerald-400" />
-                      Algorithmique Local
+                      {t('settings.heuristicTitle')}
                     </span>
                     {settings.aiProvider === 'Heuristic' && (
                       <Check className="h-4 w-4 text-emerald-400" />
                     )}
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    100% hors-ligne, zéro clé d'API requise, instantané et gratuit.
+                    {t('settings.heuristicDesc')}
                   </p>
                 </div>
               </div>
@@ -160,14 +162,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-bold text-white text-xs flex items-center gap-1.5">
                       <Sparkles className="h-4 w-4 text-indigo-400" />
-                      Google Gemini API
+                      {t('settings.geminiTitle')}
                     </span>
                     {settings.aiProvider === 'Gemini' && (
                       <Check className="h-4 w-4 text-emerald-400" />
                     )}
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    Recommandé. Analyse sémantique poussée et pitchs ultra-naturels.
+                    {t('settings.geminiDesc')}
                   </p>
                 </div>
               </div>
@@ -185,14 +187,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-bold text-white text-xs flex items-center gap-1.5">
                       <Server className="h-4 w-4 text-amber-400" />
-                      Ollama (LLM Local)
+                      {t('settings.ollamaTitle')}
                     </span>
                     {settings.aiProvider === 'Ollama' && (
                       <Check className="h-4 w-4 text-emerald-400" />
                     )}
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    Mistral ou Llama 3 tournant directement sur votre machine.
+                    {t('settings.ollamaDesc')}
                   </p>
                 </div>
               </div>
@@ -210,14 +212,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-bold text-white text-xs flex items-center gap-1.5">
                       <Key className="h-4 w-4 text-teal-400" />
-                      OpenAI (GPT-4o)
+                      {t('settings.openaiTitle')}
                     </span>
                     {settings.aiProvider === 'OpenAI' && (
                       <Check className="h-4 w-4 text-emerald-400" />
                     )}
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    Utilise votre clé d'API OpenAI standard.
+                    {t('settings.openaiDesc')}
                   </p>
                 </div>
               </div>
@@ -228,7 +230,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {/* Conditional Provider Settings */}
           {settings.aiProvider === 'Gemini' && (
             <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-3">
-              <h4 className="font-semibold text-slate-200 text-xs">Configuration Google Gemini</h4>
+              <h4 className="font-semibold text-slate-200 text-xs">{t('settings.geminiConfig')}</h4>
               <div>
                 <label className="block text-slate-400 mb-1">Clé API Google Gemini :</label>
                 <input
@@ -352,7 +354,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             className="flex items-center gap-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-lg border border-slate-700 transition"
           >
             <RotateCw className={`h-3.5 w-3.5 ${isTesting ? 'animate-spin' : ''}`} />
-            <span>{isTesting ? 'Test...' : 'Tester la connexion'}</span>
+            <span>{isTesting ? t('settings.testing') : t('settings.testConnectionBtn')}</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -360,7 +362,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               onClick={onClose}
               className="text-xs font-medium text-slate-400 hover:text-slate-200 px-3 py-2 rounded-lg transition"
             >
-              Fermer
+              {t('settings.closeBtn')}
             </button>
 
             <button
@@ -369,7 +371,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               className="flex items-center gap-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg transition shadow-sm"
             >
               <Save className="h-4 w-4" />
-              <span>{isSaving ? 'Enregistrement...' : 'Enregistrer'}</span>
+              <span>{isSaving ? t('settings.saving') : t('settings.saveBtn')}</span>
             </button>
           </div>
         </div>

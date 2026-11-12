@@ -221,6 +221,8 @@ CV :
         var jobFullText = $"{job.Title} {job.Company} {job.Description} {job.Tags} {job.Location}".ToLowerInvariant();
         var country = string.IsNullOrWhiteSpace(profile.Country) ? "France" : profile.Country.Trim();
         var title = string.IsNullOrWhiteSpace(profile.Title) ? "Specialist" : profile.Title.Trim();
+        bool isEnglish = profile.PreferredPitchLanguage.Equals("English", StringComparison.OrdinalIgnoreCase) ||
+                         profile.PreferredPitchLanguage.Equals("en", StringComparison.OrdinalIgnoreCase);
 
         // 1. Domain & Skill Fit (100% stack-agnostic across Tech, Data, Product, Design, Marketing, SecOps)
         var primarySkills = profile.PrimarySkills
@@ -283,7 +285,9 @@ CV :
             if (Regex.IsMatch(jobFullText, pattern, RegexOptions.IgnoreCase, RegexTimeout) &&
                 !profileSkills.Any(ps => ps.Contains(candidate, StringComparison.OrdinalIgnoreCase)))
             {
-                missingSkills.Add($"Compétence demandée non listée dans le profil : {candidate}");
+                missingSkills.Add(isEnglish
+                    ? $"Requested skill not listed in profile: {candidate}"
+                    : $"Compétence demandée non listée dans le profil : {candidate}");
             }
         }
 
@@ -336,12 +340,16 @@ CV :
             if (candidateInNorthAmerica)
             {
                 remoteScore = 92;
-                adminFeasibility = $"Excellente compatibilité géographique ({country}) avec la zone Amérique du Nord / US demandée par l'offre.";
+                adminFeasibility = isEnglish
+                    ? $"Excellent geographic compatibility ({country}) with the North America / US zone required by the role."
+                    : $"Excellente compatibilité géographique ({country}) avec la zone Amérique du Nord / US demandée par l'offre.";
             }
             else
             {
                 remoteScore = 25;
-                adminFeasibility = $"Offre avec forte restriction géographique US/Canada (votre localisation : {country}). Possible uniquement si l'entreprise accepte une dispense de visa via contrat B2B freelance.";
+                adminFeasibility = isEnglish
+                    ? $"Strong US/North America geographic restriction (your location: {country}). Feasible only if the company accepts B2B contractor invoicing."
+                    : $"Offre avec forte restriction géographique US/Canada (votre localisation : {country}). Possible uniquement si l'entreprise accepte une dispense de visa via contrat B2B freelance.";
             }
         }
         else if (isEurope)
@@ -349,23 +357,31 @@ CV :
             if (candidateInEurope || jobFullText.Contains(country.ToLowerInvariant()))
             {
                 remoteScore = 95;
-                adminFeasibility = $"Excellente compatibilité depuis {country} : fuseau horaire CET / Europe. Éligible en CDI (entité locale ou via portage/EOR type Deel/Remote) ou en Freelance B2B.";
+                adminFeasibility = isEnglish
+                    ? $"Excellent compatibility from {country} (CET / Europe timezone). Eligible for permanent contract (local entity or EOR like Deel/Remote) or Freelance B2B."
+                    : $"Excellente compatibilité depuis {country} : fuseau horaire CET / Europe. Éligible en CDI (entité locale ou via portage/EOR type Deel/Remote) ou en Freelance B2B.";
             }
             else
             {
                 remoteScore = 70;
-                adminFeasibility = $"Offre ciblant prioritairement le fuseau Europe/EMEA. À valider depuis {country} (collaboration en Freelance B2B ou EOR avec horaires adaptés).";
+                adminFeasibility = isEnglish
+                    ? $"Role primarily targeting the Europe/EMEA timezone. To be validated from {country} (B2B contractor or EOR with overlapping hours)."
+                    : $"Offre ciblant prioritairement le fuseau Europe/EMEA. À valider depuis {country} (collaboration en Freelance B2B ou EOR avec horaires adaptés).";
             }
         }
         else if (isWorldwide)
         {
             remoteScore = 90;
-            adminFeasibility = $"Poste ouvert à l'international / Worldwide. Idéal pour travailler depuis {country} en contrat B2B (facturation indépendante / société) ou via EOR (Deel, Remote.com).";
+            adminFeasibility = isEnglish
+                ? $"Worldwide remote opening. Ideal for working from {country} via direct B2B contractor invoicing or EOR (Deel, Remote.com)."
+                : $"Poste ouvert à l'international / Worldwide. Idéal pour travailler depuis {country} en contrat B2B (facturation indépendante / société) ou via EOR (Deel, Remote.com).";
         }
         else
         {
             remoteScore = 75;
-            adminFeasibility = $"Poste remote. À valider lors du premier contact : ouverture aux résidents basés en {country} en B2B Contractor ou EOR.";
+            adminFeasibility = isEnglish
+                ? $"Remote role. Validate during initial contact: openness to residents based in {country} via B2B Contractor or EOR."
+                : $"Poste remote. À valider lors du premier contact : ouverture aux résidents basés en {country} en B2B Contractor ou EOR.";
         }
 
         // 3. Overall Match Score
@@ -375,28 +391,40 @@ CV :
         var strengths = new List<string>();
         if (matchedSkills.Count > 0)
         {
-            strengths.Add($"Alignement technique avéré sur : {string.Join(", ", matchedSkills.Take(5))}");
+            strengths.Add(isEnglish
+                ? $"Strong skill alignment on: {string.Join(", ", matchedSkills.Take(5))}"
+                : $"Alignement technique avéré sur : {string.Join(", ", matchedSkills.Take(5))}");
         }
         if (profile.YearsOfExperience >= 4)
         {
-            strengths.Add($"Expérience solide ({profile.YearsOfExperience} ans) idéale pour l'autonomie requise en full remote");
+            strengths.Add(isEnglish
+                ? $"Solid experience ({profile.YearsOfExperience} years) ideal for full remote autonomy"
+                : $"Expérience solide ({profile.YearsOfExperience} ans) idéale pour l'autonomie requise en full remote");
         }
         if (remoteScore >= 85)
         {
-            strengths.Add($"Localisation ({country}) compatible avec la politique remote de l'entreprise");
+            strengths.Add(isEnglish
+                ? $"Location ({country}) compatible with the company's remote policy"
+                : $"Localisation ({country}) compatible avec la politique remote de l'entreprise");
         }
         if (job.DirectContact != null)
         {
-            strengths.Add($"Contact direct identifié ({job.DirectContact}) permettant de bypasser les ATS classiques");
+            strengths.Add(isEnglish
+                ? $"Direct contact identified ({job.DirectContact}) to bypass standard ATS filters"
+                : $"Contact direct identifié ({job.DirectContact}) permettant de bypasser les ATS classiques");
         }
 
         if (matchedSkills.Count < 2)
         {
-            missingSkills.Add("Certaines compétences spécifiques demandées ne figurent pas explicitement dans votre profil principal");
+            missingSkills.Add(isEnglish
+                ? "Some specific skills requested in the job posting are not explicitly listed in your primary profile"
+                : "Certaines compétences spécifiques demandées ne figurent pas explicitement dans votre profil principal");
         }
         if (jobFullText.Contains("senior") && profile.YearsOfExperience < 5)
         {
-            missingSkills.Add("Poste ciblé Senior : mettre en avant l'impact produit et l'autonomie passée");
+            missingSkills.Add(isEnglish
+                ? "Senior-targeted role: highlight past product impact and autonomous delivery"
+                : "Poste ciblé Senior : mettre en avant l'impact produit et l'autonomie passée");
         }
 
         return new JobMatch
@@ -406,7 +434,9 @@ CV :
             MatchScore = overallScore,
             TechStackFit = techScore,
             RemoteEligibilityFit = remoteScore,
-            Summary = $"Match à {overallScore}% basé sur votre profil ({title} - {country}) et les critères de l'offre.",
+            Summary = isEnglish
+                ? $"{overallScore}% match based on your profile ({title} - {country}) and the role requirements."
+                : $"Match à {overallScore}% basé sur votre profil ({title} - {country}) et les critères de l'offre.",
             StrengthsJson = JsonSerializer.Serialize(strengths),
             MissingSkillsJson = JsonSerializer.Serialize(missingSkills),
             AdministrativeFeasibility = adminFeasibility,

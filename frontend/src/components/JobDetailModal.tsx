@@ -15,6 +15,7 @@ import {
   Check
 } from 'lucide-react';
 import { JobOffer } from '../types';
+import { useI18n } from '../i18n';
 
 interface JobDetailModalProps {
   job: JobOffer | null;
@@ -33,6 +34,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   onSaveNotes,
   onReMatch,
 }) => {
+  const { t } = useI18n();
   const [notes, setNotes] = useState(job?.userNotes || '');
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [isReMatching, setIsReMatching] = useState(false);
@@ -101,7 +103,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               </span>
               {job.isFranceCompatible && (
                 <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  ✓ Compatible Remote / EOR
+                  ✓ {t('card.compatibleBadge')}
                 </span>
               )}
             </div>
@@ -125,7 +127,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
 
           <button
             onClick={onClose}
-            aria-label="Fermer la modal"
+            aria-label={t('detail.closeAria')}
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
           >
             <X className="h-5 w-5" />
@@ -143,7 +145,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                   <Mail className="h-5 w-5 text-amber-400" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-amber-300 uppercase tracking-wider">Contact direct identifié</h4>
+                  <h4 className="text-xs font-semibold text-amber-300 uppercase tracking-wider">{t('detail.directContactTitle')}</h4>
                   <p className="text-sm font-mono font-medium text-white">{job.directContact}</p>
                 </div>
               </div>
@@ -152,7 +154,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 className="flex items-center gap-1.5 text-xs font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 px-3 py-2 rounded-lg border border-amber-500/40 transition"
               >
                 {copiedContact ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>{copiedContact ? 'Copié !' : 'Copier l\'email'}</span>
+                <span>{copiedContact ? t('detail.copied') : t('detail.copyEmail')}</span>
               </button>
             </div>
           )}
@@ -166,8 +168,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                     <Sparkles className="h-4 w-4 text-emerald-400" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base">Analyse de Matching IA</h3>
-                    <p className="text-xs text-slate-400">Évaluation basée sur votre CV et vos contraintes remote</p>
+                    <h3 className="font-bold text-white text-base">{t('detail.aiTitle')}</h3>
+                    <p className="text-xs text-slate-400">{t('detail.aiSubtitle')}</p>
                   </div>
                 </div>
 
@@ -175,7 +177,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                   <button
                     onClick={handleReMatch}
                     disabled={isReMatching}
-                    title="Recalculer le match avec l'IA"
+                    title={t('detail.rematchTitle')}
                     className="p-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition"
                   >
                     <RotateCw className={`h-3.5 w-3.5 ${isReMatching ? 'animate-spin' : ''}`} />
@@ -191,7 +193,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
                   <div className="flex justify-between text-slate-300 mb-1">
-                    <span>Adéquation Stack Technique</span>
+                    <span>{t('detail.techFit')}</span>
                     <strong className="text-emerald-400">{match.techStackFit}%</strong>
                   </div>
                   <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -204,7 +206,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
 
                 <div>
                   <div className="flex justify-between text-slate-300 mb-1">
-                    <span>Éligibilité Remote & Localisation</span>
+                    <span>{t('detail.remoteFit')}</span>
                     <strong className="text-teal-400">{match.remoteEligibilityFit}%</strong>
                   </div>
                   <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -229,7 +231,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                   <div className="bg-emerald-950/20 border border-emerald-800/30 rounded-lg p-3">
                     <h4 className="text-xs font-semibold text-emerald-400 mb-2 flex items-center gap-1.5">
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      Points forts identifiés
+                      {t('detail.strengthsTitle')}
                     </h4>
                     <ul className="text-xs space-y-1 text-slate-300">
                       {strengths.map((s, i) => (
@@ -246,7 +248,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                   <div className="bg-amber-950/20 border border-amber-800/30 rounded-lg p-3">
                     <h4 className="text-xs font-semibold text-amber-400 mb-2 flex items-center gap-1.5">
                       <AlertTriangle className="h-3.5 w-3.5" />
-                      Points de vigilance / Gaps
+                      {t('detail.gapsTitle')}
                     </h4>
                     <ul className="text-xs space-y-1 text-slate-300">
                       {missingSkills.map((m, i) => (
@@ -265,7 +267,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 <div className="bg-blue-950/20 border border-blue-800/30 rounded-lg p-3">
                   <h4 className="text-xs font-semibold text-blue-300 mb-1 flex items-center gap-1.5">
                     <Globe className="h-3.5 w-3.5 text-blue-400" />
-                    Faisabilité administrative & contractuelle (B2B / EOR / CDI)
+                    {t('detail.feasibilityTitle')}
                   </h4>
                   <p className="text-xs text-slate-300 leading-relaxed">
                     {match.administrativeFeasibility}
@@ -276,14 +278,14 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               {/* Tailored Pitch Preview CTA */}
               <div className="pt-2 flex items-center justify-between">
                 <span className="text-xs text-slate-400">
-                  Un message d'accroche sur-mesure est prêt pour ce recruteur.
+                  {t('detail.pitchReadyHint')}
                 </span>
                 <button
                   onClick={() => onOpenPitch(job)}
                   className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg transition shadow-sm"
                 >
                   <Send className="h-3.5 w-3.5" />
-                  <span>Consulter le Pitch IA</span>
+                  <span>{t('detail.viewPitchBtn')}</span>
                 </button>
               </div>
 
@@ -292,28 +294,28 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
 
           {/* Job Full Description */}
           <div>
-            <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-wider">Description de l'annonce</h4>
+            <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-wider">{t('detail.descriptionTitle')}</h4>
             <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-4 text-xs text-slate-300 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
-              {job.description || "Aucune description détaillée n'est disponible pour cette offre."}
+              {job.description || t('detail.noDescription')}
             </div>
           </div>
 
           {/* User Notes */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-bold text-white uppercase tracking-wider">Mes Notes personnelles</h4>
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider">{t('detail.notesTitle')}</h4>
               <button
                 onClick={handleSaveNotes}
                 disabled={isSavingNotes}
                 className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold"
               >
-                {isSavingNotes ? 'Sauvegarde...' : 'Enregistrer les notes'}
+                {isSavingNotes ? t('detail.savingNotes') : t('detail.saveNotesBtn')}
               </button>
             </div>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ex: Contacté sur LinkedIn le 18/09, proposition envoyée en contrat freelance B2B..."
+              placeholder={t('detail.notesPlaceholder')}
               className="w-full bg-slate-950/50 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 min-h-[80px]"
             />
           </div>
@@ -324,20 +326,20 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
         <div className="p-4 border-t border-slate-800 bg-slate-900/95 flex flex-wrap items-center justify-between gap-3">
           
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400">Statut :</span>
+            <span className="text-xs text-slate-400">{t('detail.statusLabel')}</span>
             <select
               value={job.status}
               onChange={(e) => onUpdateStatus(job.id, e.target.value as JobOffer['status'])}
-              aria-label="Statut du poste"
+              aria-label={t('detail.statusAria')}
               className="text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-3 py-1.5 cursor-pointer focus:outline-none"
             >
-              <option value="Discovered">Repéré</option>
-              <option value="Saved">Sauvegardé</option>
-              <option value="Applied">Candidaté (Contact envoyé)</option>
-              <option value="Interview">Entretien en cours</option>
-              <option value="Offer">Offre reçue</option>
-              <option value="Archived">Archivé</option>
-              <option value="Rejected">Non retenu</option>
+              <option value="Discovered">{t('status.Discovered')}</option>
+              <option value="Saved">{t('status.Saved')}</option>
+              <option value="Applied">{t('status.Applied')}</option>
+              <option value="Interview">{t('status.Interview')}</option>
+              <option value="Offer">{t('status.Offer')}</option>
+              <option value="Archived">{t('status.Archived')}</option>
+              <option value="Rejected">{t('status.Rejected')}</option>
             </select>
           </div>
 
@@ -347,7 +349,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 px-3 py-2 rounded-lg transition"
             >
               <Send className="h-3.5 w-3.5" />
-              <span>Générer un Pitch IA</span>
+              <span>{t('detail.generatePitchBtn')}</span>
             </button>
 
             {job.applyUrl && (
@@ -357,7 +359,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 rel="noreferrer"
                 className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg transition shadow-sm"
               >
-                <span>Accéder à l'offre</span>
+                <span>{t('detail.openJobBtn')}</span>
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}

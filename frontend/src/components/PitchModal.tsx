@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { JobOffer } from '../types';
 import { generatePitch } from '../api';
+import { useI18n } from '../i18n';
 
 interface PitchModalProps {
   job: JobOffer | null;
@@ -21,6 +22,7 @@ export const PitchModal: React.FC<PitchModalProps> = ({
   onClose,
   activeProfileId,
 }) => {
+  const { t } = useI18n();
   const initialPitch = job?.activeMatch?.tailoredPitch || '';
   const [editedPitch, setEditedPitch] = useState<string | null>(null);
   const [customInstructions, setCustomInstructions] = useState('');
@@ -64,16 +66,16 @@ export const PitchModal: React.FC<PitchModalProps> = ({
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-base">Générateur de Pitch d'Approche Directe</h3>
+              <h3 className="font-bold text-white text-base">{t('pitch.title')}</h3>
               <p className="text-xs text-slate-400">
-                Message personnalisé pour <strong className="text-slate-200">{job.company}</strong> ({job.title})
+                {t('pitch.subtitle', { company: job.company, title: job.title })}
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            aria-label="Fermer la modal"
+            aria-label={t('detail.closeAria')}
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
           >
             <X className="h-5 w-5" />
@@ -86,14 +88,14 @@ export const PitchModal: React.FC<PitchModalProps> = ({
           {/* Direct contact hint */}
           {job.directContact && (
             <div className="flex items-center justify-between text-xs bg-amber-500/10 border border-amber-500/30 text-amber-200 px-3.5 py-2 rounded-lg">
-              <span>Destinataire direct identifié : <strong>{job.directContact}</strong></span>
+              <span>{t('pitch.directRecipient')} <strong>{job.directContact}</strong></span>
               {mailtoUrl && (
                 <a
                   href={mailtoUrl}
                   className="flex items-center gap-1 font-semibold text-amber-300 hover:text-amber-100 underline"
                 >
                   <Mail className="h-3.5 w-3.5" />
-                  Ouvrir email
+                  {t('pitch.openEmail')}
                 </a>
               )}
             </div>
@@ -102,14 +104,14 @@ export const PitchModal: React.FC<PitchModalProps> = ({
           {/* Instructions personnalisées */}
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Consignes spécifiques pour l'IA (optionnel) :
+              {t('pitch.instructionsLabel')}
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={customInstructions}
                 onChange={(e) => setCustomInstructions(e.target.value)}
-                placeholder="Ex: Rédiger en français, insister sur les microservices C# et proposer 600€ TJM..."
+                placeholder={t('pitch.instructionsPlaceholder')}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
               />
               <button
@@ -118,7 +120,7 @@ export const PitchModal: React.FC<PitchModalProps> = ({
                 className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg transition shrink-0"
               >
                 <RotateCw className={`h-3.5 w-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
-                <span>{isGenerating ? 'Génération...' : 'Régénérer'}</span>
+                <span>{isGenerating ? t('pitch.generating') : t('pitch.regenerateBtn')}</span>
               </button>
             </div>
           </div>
@@ -127,10 +129,10 @@ export const PitchModal: React.FC<PitchModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-semibold text-slate-300">
-                Message d'accroche (prêt à envoyer) :
+                {t('pitch.editorLabel')}
               </label>
               <span className="text-[11px] text-slate-400">
-                Modifiable directement avant copie
+                {t('pitch.editableHint')}
               </span>
             </div>
             <textarea
@@ -146,7 +148,7 @@ export const PitchModal: React.FC<PitchModalProps> = ({
         {/* Footer */}
         <div className="p-4 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between gap-3">
           <span className="text-xs text-slate-400">
-            Astuce : les emails courts avec proposition de valeur claire ont 4x plus de réponses.
+            {t('pitch.tip')}
           </span>
 
           <div className="flex items-center gap-2">
@@ -154,7 +156,7 @@ export const PitchModal: React.FC<PitchModalProps> = ({
               onClick={onClose}
               className="text-xs font-medium text-slate-400 hover:text-slate-200 px-3 py-2 rounded-lg transition"
             >
-              Fermer
+              {t('pitch.closeBtn')}
             </button>
 
             <button
@@ -162,7 +164,7 @@ export const PitchModal: React.FC<PitchModalProps> = ({
               className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg transition shadow-sm"
             >
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              <span>{copied ? 'Copié dans le presse-papier !' : 'Copier le message'}</span>
+              <span>{copied ? t('pitch.copiedBtn') : t('pitch.copyBtn')}</span>
             </button>
           </div>
         </div>

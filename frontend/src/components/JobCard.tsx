@@ -10,6 +10,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { JobOffer } from '../types';
+import { useI18n } from '../i18n';
 
 interface JobCardProps {
   job: JobOffer;
@@ -24,6 +25,7 @@ export const JobCard: React.FC<JobCardProps> = ({
   onOpenPitch,
   onUpdateStatus,
 }) => {
+  const { t } = useI18n();
   const match = job.activeMatch;
   const matchScore = match?.matchScore ?? 0;
 
@@ -39,14 +41,14 @@ export const JobCard: React.FC<JobCardProps> = ({
       return (
         <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-300 border border-orange-500/30">
           <Sparkles className="h-3 w-3" />
-          Hacker News (Direct CTO)
+          {t('card.hnBadge')}
         </span>
       );
     }
     if (source.includes('CustomAts')) {
       return (
         <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30">
-          ATS Direct Entreprise
+          {t('card.atsBadge')}
         </span>
       );
     }
@@ -84,7 +86,7 @@ export const JobCard: React.FC<JobCardProps> = ({
             {job.isFranceCompatible && (
               <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-teal-500/15 text-teal-300 border border-teal-500/25">
                 <CheckCircle2 className="h-3 w-3" />
-                Compatible Remote / EOR
+                {t('card.compatibleBadge')}
               </span>
             )}
 
@@ -137,7 +139,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           <div className="mb-3 flex items-center gap-2 text-xs bg-amber-500/10 border border-amber-500/30 text-amber-200 px-3 py-1.5 rounded-lg">
             <Mail className="h-3.5 w-3.5 text-amber-400 shrink-0" />
             <span className="truncate">
-              Contact direct : <strong>{job.directContact}</strong>
+              {t('card.directContact')} <strong>{job.directContact}</strong>
             </span>
           </div>
         )}
@@ -152,7 +154,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           <div className="mb-3 text-[11px] bg-emerald-950/20 border border-emerald-800/30 rounded-lg p-2.5 space-y-1">
             <div className="font-semibold text-emerald-400 flex items-center gap-1">
               <Sparkles className="h-3 w-3" />
-              <span>Pourquoi ça matche avec votre CV :</span>
+              <span>{t('card.whyMatches')}</span>
             </div>
             <ul className="text-slate-300 space-y-0.5">
               {strengths.slice(0, 2).map((s, idx) => (
@@ -193,15 +195,15 @@ export const JobCard: React.FC<JobCardProps> = ({
           <select
             value={job.status}
             onChange={(e) => onUpdateStatus(job.id, e.target.value as JobOffer['status'])}
-            aria-label="Statut de la candidature"
+            aria-label={t('card.statusAria')}
             className="text-[11px] font-medium bg-slate-800 hover:bg-slate-700/80 text-slate-300 border border-slate-700 rounded-md px-2 py-1 focus:outline-none cursor-pointer"
           >
-            <option value="Discovered">Repéré</option>
-            <option value="Saved">Sauvegardé</option>
-            <option value="Applied">Candidaté</option>
-            <option value="Interview">Entretien</option>
-            <option value="Offer">Offre</option>
-            <option value="Archived">Archivé</option>
+            <option value="Discovered">{t('status.Discovered')}</option>
+            <option value="Saved">{t('status.Saved')}</option>
+            <option value="Applied">{t('status.Applied')}</option>
+            <option value="Interview">{t('status.Interview')}</option>
+            <option value="Offer">{t('status.Offer')}</option>
+            <option value="Archived">{t('status.Archived')}</option>
           </select>
         </div>
 
@@ -210,11 +212,11 @@ export const JobCard: React.FC<JobCardProps> = ({
           {/* Pitch Generator Button */}
           <button
             onClick={() => onOpenPitch(job)}
-            title="Générer un pitch / message d'accroche personnalisé"
+            title={t('card.pitchTitle')}
             className="flex items-center gap-1 text-xs font-semibold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 px-2.5 py-1.5 rounded-lg transition"
           >
             <Send className="h-3 w-3" />
-            <span>Pitch IA</span>
+            <span>{t('card.pitchBtn')}</span>
           </button>
 
           {/* Details Button */}
@@ -222,7 +224,7 @@ export const JobCard: React.FC<JobCardProps> = ({
             onClick={() => onViewDetails(job)}
             className="text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-800/60 hover:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-700/60 transition"
           >
-            Détails
+            {t('card.detailsBtn')}
           </button>
 
           {/* Direct Link */}
@@ -231,7 +233,7 @@ export const JobCard: React.FC<JobCardProps> = ({
               href={job.applyUrl}
               target="_blank"
               rel="noreferrer"
-              title="Ouvrir l'annonce originale"
+              title={t('card.openOriginal')}
               className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-slate-700/60 transition"
             >
               <ExternalLink className="h-3.5 w-3.5" />

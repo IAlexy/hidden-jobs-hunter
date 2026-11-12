@@ -17,6 +17,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { IngestUrlModal } from './components/IngestUrlModal';
 import { KanbanView } from './components/KanbanView';
 import { JobOffer, StatsData, UserProfile } from './types';
+import { useI18n } from './i18n';
 import { 
   fetchJobs, 
   fetchJobDetails, 
@@ -30,6 +31,8 @@ import {
 } from './api';
 
 export function App() {
+  const { t } = useI18n();
+
   // Navigation & Tabs
   const [activeTab, setActiveTab] = useState<'explorer' | 'pipeline'>('explorer');
 
@@ -169,11 +172,11 @@ export function App() {
     setIsSyncing(true);
     try {
       const res = await triggerSync();
-      showToast(`Scan terminé : ${res.newJobsSaved} nouvelles opportunités invisibles ajoutées !`);
+      showToast(t('app.toastSyncDone', { count: res.newJobsSaved }));
       await loadProfilesAndStats();
       await loadJobs();
     } catch {
-      showToast('Erreur lors de la synchronisation.');
+      showToast(t('app.toastSyncError'));
     } finally {
       setIsSyncing(false);
     }
@@ -203,7 +206,7 @@ export function App() {
     setJobs((prev) =>
       prev.map((j) => (j.id === id ? { ...j, userNotes: notes } : j))
     );
-    showToast('Notes enregistrées !');
+    showToast(t('app.toastNotesSaved'));
   };
 
   // Re-match job
@@ -212,7 +215,7 @@ export function App() {
     const updated = await fetchJobDetails(id, activeProfile?.id);
     setJobs((prev) => prev.map((j) => (j.id === id ? updated : j)));
     setSelectedJobForDetail(updated);
-    showToast('Score et pitch recalculés !');
+    showToast(t('app.toastRematched'));
   };
 
   const totalPages = Math.ceil(totalJobs / pageSize) || 1;
@@ -251,9 +254,9 @@ export function App() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold text-white tracking-tight">Pipeline de Recrutement</h2>
+                <h2 className="text-lg font-bold text-white tracking-tight">{t('app.pipelineTitle')}</h2>
                 <p className="text-xs text-slate-400">
-                  Suivez vos démarches auprès des CTOs et entreprises ciblées
+                  {t('app.pipelineSubtitle')}
                 </p>
               </div>
             </div>
@@ -285,7 +288,7 @@ export function App() {
                       setSearch(e.target.value);
                       setPage(1);
                     }}
-                    placeholder="Recherche par poste, entreprise, compétences (Tech, Data/IA, Produit, Design, Cloud...)..."
+                    placeholder={t('app.searchPlaceholder')}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
                   />
                 </div>
@@ -293,40 +296,40 @@ export function App() {
                 {/* Remote Scope Filter */}
                 <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 shrink-0">
                   <Globe className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-xs text-slate-400 font-medium">Scope :</span>
+                  <span className="text-xs text-slate-400 font-medium">{t('app.scopeLabel')}</span>
                   <select
                     value={scopeFilter}
                     onChange={(e) => {
                       setScopeFilter(e.target.value);
                       setPage(1);
                     }}
-                    aria-label="Filtrer par périmètre de télétravail"
+                    aria-label={t('app.scopeAria')}
                     className="bg-transparent text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer"
                   >
-                    <option value="All" className="bg-slate-900">Tous les scopes</option>
-                    <option value="Worldwide" className="bg-slate-900">Mondial (Worldwide)</option>
-                    <option value="Europe" className="bg-slate-900">Europe & Fuseau CET</option>
-                    <option value="Remote" className="bg-slate-900">Remote global</option>
+                    <option value="All" className="bg-slate-900">{t('app.scopeAll')}</option>
+                    <option value="Worldwide" className="bg-slate-900">{t('app.scopeWorldwide')}</option>
+                    <option value="Europe" className="bg-slate-900">{t('app.scopeEurope')}</option>
+                    <option value="Remote" className="bg-slate-900">{t('app.scopeRemote')}</option>
                   </select>
                 </div>
 
                 {/* Score Min Filter */}
                 <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 shrink-0">
                   <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                  <span className="text-xs text-slate-400 font-medium">Match CV :</span>
+                  <span className="text-xs text-slate-400 font-medium">{t('app.matchLabel')}</span>
                   <select
                     value={minScoreFilter ?? ''}
                     onChange={(e) => {
                       setMinScoreFilter(e.target.value ? Number(e.target.value) : undefined);
                       setPage(1);
                     }}
-                    aria-label="Filtrer par score de matching CV"
+                    aria-label={t('app.matchAria')}
                     className="bg-transparent text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer"
                   >
-                    <option value="" className="bg-slate-900">Tous les scores</option>
-                    <option value="90" className="bg-slate-900">&gt; 90% (Top Fit)</option>
-                    <option value="75" className="bg-slate-900">&gt; 75% (Solide)</option>
-                    <option value="60" className="bg-slate-900">&gt; 60% (Large)</option>
+                    <option value="" className="bg-slate-900">{t('app.matchAll')}</option>
+                    <option value="90" className="bg-slate-900">{t('app.match90')}</option>
+                    <option value="75" className="bg-slate-900">{t('app.match75')}</option>
+                    <option value="60" className="bg-slate-900">{t('app.match60')}</option>
                   </select>
                 </div>
 
@@ -339,40 +342,40 @@ export function App() {
                   
                   {/* Source Filter */}
                   <div className="flex items-center gap-1.5 bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-700/60">
-                    <span className="text-slate-400">Source :</span>
+                    <span className="text-slate-400">{t('app.sourceLabel')}</span>
                     <select
                       value={sourceFilter}
                       onChange={(e) => {
                         setSourceFilter(e.target.value);
                         setPage(1);
                       }}
-                      aria-label="Filtrer par source d'offre"
+                      aria-label={t('app.sourceAria')}
                       className="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer"
                     >
-                      <option value="All" className="bg-slate-900">Toutes sources</option>
-                      <option value="HackerNews" className="bg-slate-900">Hacker News Directs</option>
-                      <option value="Remotive" className="bg-slate-900">Remotive Tech</option>
-                      <option value="Jobicy" className="bg-slate-900">Jobicy Worldwide</option>
-                      <option value="CustomAts" className="bg-slate-900">ATS Directs</option>
+                      <option value="All" className="bg-slate-900">{t('app.sourceAll')}</option>
+                      <option value="HackerNews" className="bg-slate-900">{t('app.sourceHn')}</option>
+                      <option value="Remotive" className="bg-slate-900">{t('app.sourceRemotive')}</option>
+                      <option value="Jobicy" className="bg-slate-900">{t('app.sourceJobicy')}</option>
+                      <option value="CustomAts" className="bg-slate-900">{t('app.sourceCustomAts')}</option>
                     </select>
                   </div>
 
                   {/* Contract Type Filter */}
                   <div className="flex items-center gap-1.5 bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-700/60">
-                    <span className="text-slate-400">Contrat :</span>
+                    <span className="text-slate-400">{t('app.contractLabel')}</span>
                     <select
                       value={contractFilter}
                       onChange={(e) => {
                         setContractFilter(e.target.value);
                         setPage(1);
                       }}
-                      aria-label="Filtrer par type de contrat"
+                      aria-label={t('app.contractAria')}
                       className="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer"
                     >
-                      <option value="All" className="bg-slate-900">Tous contrats</option>
-                      <option value="CDI" className="bg-slate-900">CDI / Full-time</option>
-                      <option value="Freelance" className="bg-slate-900">Freelance / Contractor B2B</option>
-                      <option value="partiel" className="bg-slate-900">Temps partiel</option>
+                      <option value="All" className="bg-slate-900">{t('app.contractAll')}</option>
+                      <option value="CDI" className="bg-slate-900">{t('app.contractCdi')}</option>
+                      <option value="Freelance" className="bg-slate-900">{t('app.contractFreelance')}</option>
+                      <option value="partiel" className="bg-slate-900">{t('app.contractPartTime')}</option>
                     </select>
                   </div>
 
@@ -387,14 +390,14 @@ export function App() {
                       }}
                       className="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0"
                     />
-                    <span>Compatible Localisation / EOR</span>
+                    <span>{t('app.compatibleToggle')}</span>
                   </label>
 
                 </div>
 
                 {/* Total count indicator */}
                 <div className="text-slate-400 font-medium">
-                  <strong className="text-slate-200">{totalJobs}</strong> opportunités trouvées
+                  <strong className="text-slate-200">{totalJobs}</strong> {t('app.opportunitiesFound')}
                 </div>
 
               </div>
@@ -405,7 +408,7 @@ export function App() {
             {isLoadingJobs ? (
               <div className="py-24 text-center space-y-3">
                 <RotateCw className="h-8 w-8 text-emerald-400 animate-spin mx-auto" />
-                <p className="text-xs text-slate-400">Interrogation du radar en cours...</p>
+                <p className="text-xs text-slate-400">{t('app.loadingRadar')}</p>
               </div>
             ) : jobs.length === 0 ? (
               <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-12 text-center space-y-4 max-w-md mx-auto">
@@ -413,16 +416,16 @@ export function App() {
                   <Search className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Aucune offre ne correspond à ces filtres</h3>
+                  <h3 className="text-sm font-bold text-white">{t('app.emptyTitle')}</h3>
                   <p className="text-xs text-slate-400 mt-1">
-                    Essayez d'élargir le score minimal ou le mot-clé de recherche, ou lancez un nouveau scan du radar.
+                    {t('app.emptySubtitle')}
                   </p>
                 </div>
                 <button
                   onClick={handleSync}
                   className="text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg transition"
                 >
-                  Scanner de nouvelles sources
+                  {t('app.scanNewSources')}
                 </button>
               </div>
             ) : (
@@ -443,8 +446,7 @@ export function App() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between pt-4 border-t border-slate-800 text-xs text-slate-400">
                 <div>
-                  Page <strong className="text-slate-200">{page}</strong> sur{' '}
-                  <strong className="text-slate-200">{totalPages}</strong>
+                  {t('app.pageOf', { page, totalPages })}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -454,7 +456,7 @@ export function App() {
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 transition"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    <span>Précédent</span>
+                    <span>{t('app.prev')}</span>
                   </button>
 
                   <button
@@ -462,7 +464,7 @@ export function App() {
                     disabled={page >= totalPages}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 transition"
                   >
-                    <span>Suivant</span>
+                    <span>{t('app.next')}</span>
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>

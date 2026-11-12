@@ -7,6 +7,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { JobOffer } from '../types';
+import { useI18n } from '../i18n';
 
 interface KanbanViewProps {
   jobs: JobOffer[];
@@ -15,12 +16,12 @@ interface KanbanViewProps {
   onUpdateStatus: (id: number, status: JobOffer['status']) => void;
 }
 
-const COLUMNS: { id: JobOffer['status']; title: string; color: string; badgeBg: string }[] = [
-  { id: 'Saved', title: 'Sauvegardées & À contacter', color: 'border-blue-500/50', badgeBg: 'bg-blue-500/20 text-blue-300' },
-  { id: 'Applied', title: 'Contact / Candidature envoyée', color: 'border-amber-500/50', badgeBg: 'bg-amber-500/20 text-amber-300' },
-  { id: 'Interview', title: 'Entretiens en cours', color: 'border-emerald-500/50', badgeBg: 'bg-emerald-500/20 text-emerald-300' },
-  { id: 'Offer', title: 'Offres reçues 🎉', color: 'border-purple-500/50', badgeBg: 'bg-purple-500/20 text-purple-300' },
-  { id: 'Archived', title: 'Archivées / Passées', color: 'border-slate-700/50', badgeBg: 'bg-slate-800 text-slate-400' },
+const COLUMNS: { id: JobOffer['status']; titleKey: string; color: string; badgeBg: string }[] = [
+  { id: 'Saved', titleKey: 'kanban.colSaved', color: 'border-blue-500/50', badgeBg: 'bg-blue-500/20 text-blue-300' },
+  { id: 'Applied', titleKey: 'kanban.colApplied', color: 'border-amber-500/50', badgeBg: 'bg-amber-500/20 text-amber-300' },
+  { id: 'Interview', titleKey: 'kanban.colInterview', color: 'border-emerald-500/50', badgeBg: 'bg-emerald-500/20 text-emerald-300' },
+  { id: 'Offer', titleKey: 'kanban.colOffer', color: 'border-purple-500/50', badgeBg: 'bg-purple-500/20 text-purple-300' },
+  { id: 'Archived', titleKey: 'kanban.colArchived', color: 'border-slate-700/50', badgeBg: 'bg-slate-800 text-slate-400' },
 ];
 
 export const KanbanView: React.FC<KanbanViewProps> = ({
@@ -29,6 +30,8 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
   onOpenPitch,
   onUpdateStatus,
 }) => {
+  const { t } = useI18n();
+
   return (
     <div className="overflow-x-auto pb-6">
       <div className="flex gap-4 min-w-[1100px]">
@@ -42,7 +45,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
             >
               {/* Column Header */}
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
-                <span className="text-xs font-bold text-slate-200">{col.title}</span>
+                <span className="text-xs font-bold text-slate-200">{t(col.titleKey)}</span>
                 <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${col.badgeBg}`}>
                   {colJobs.length}
                 </span>
@@ -52,7 +55,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
               <div className="space-y-3 overflow-y-auto flex-1 pr-1">
                 {colJobs.length === 0 ? (
                   <div className="text-center py-8 text-xs text-slate-500 italic">
-                    Aucune offre dans cette colonne
+                    {t('kanban.emptyCol')}
                   </div>
                 ) : (
                   colJobs.map((job) => {
@@ -106,17 +109,17 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => onOpenPitch(job)}
-                              title="Générer / Copier Pitch IA"
+                              title={t('card.pitchTitle')}
                               className="p-1 text-emerald-400 hover:bg-emerald-950/40 rounded transition"
                             >
                               <Send className="h-3.5 w-3.5" />
                             </button>
                             <button
                               onClick={() => onViewDetails(job)}
-                              title="Détails"
+                              title={t('card.detailsBtn')}
                               className="text-[10px] text-slate-400 hover:text-white px-1.5 py-0.5 rounded hover:bg-slate-700"
                             >
-                              Détails
+                              {t('card.detailsBtn')}
                             </button>
                           </div>
 
@@ -128,7 +131,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                   const prevIdx = COLUMNS.findIndex((c) => c.id === col.id) - 1;
                                   if (prevIdx >= 0) onUpdateStatus(job.id, COLUMNS[prevIdx].id);
                                 }}
-                                title="Déplacer vers la gauche"
+                                title={t('kanban.moveLeft')}
                                 className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition"
                               >
                                 <ArrowLeft className="h-3 w-3" />
@@ -141,7 +144,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                   const nextIdx = COLUMNS.findIndex((c) => c.id === col.id) + 1;
                                   if (nextIdx < COLUMNS.length) onUpdateStatus(job.id, COLUMNS[nextIdx].id);
                                 }}
-                                title="Déplacer vers l'étape suivante"
+                                title={t('kanban.moveRight')}
                                 className="p-1 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/40 rounded transition"
                               >
                                 <ArrowRight className="h-3 w-3" />
