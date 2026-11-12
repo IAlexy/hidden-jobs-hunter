@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HiddenJobsHunter.Api", "backend\HiddenJobsHunter.Api.csproj", "{97889F7A-3CAF-42E0-950B-344FEEA0F736}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{A79C08E8-FF05-4A80-B2CD-90F7A3B878B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HiddenJobsHunter.Tests", "backend\HiddenJobsHunter.Tests\HiddenJobsHunter.Tests.csproj", "{681B05D9-FC8C-4EFA-BA8F-5A3726C366D3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{97889F7A-3CAF-42E0-950B-344FEEA0F736}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97889F7A-3CAF-42E0-950B-344FEEA0F736}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97889F7A-3CAF-42E0-950B-344FEEA0F736}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97889F7A-3CAF-42E0-950B-344FEEA0F736}.Release|Any CPU.Build.0 = Release|Any CPU
+		{681B05D9-FC8C-4EFA-BA8F-5A3726C366D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{681B05D9-FC8C-4EFA-BA8F-5A3726C366D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{681B05D9-FC8C-4EFA-BA8F-5A3726C366D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{681B05D9-FC8C-4EFA-BA8F-5A3726C366D3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{681B05D9-FC8C-4EFA-BA8F-5A3726C366D3} = {A79C08E8-FF05-4A80-B2CD-90F7A3B878B0}
+	EndGlobalSection
+EndGlobal

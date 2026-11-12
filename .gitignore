@@ -1,0 +1,43 @@
+# .NET / C# Build & Test Artifacts
+bin/
+obj/
+TestResults/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# SQLite Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Node / Frontend Artifacts
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+.npm/
+
+# SonarQube / SonarCloud
+.sonarqube/
+.scannerwork/
+
+# Logs & Runtime PIDs
+logs/
+*.log
+*.pid
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+appsettings.Local.json
+
+# IDEs & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
