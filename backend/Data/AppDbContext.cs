@@ -70,6 +70,8 @@ public class AppDbContext : DbContext
                 Name = "Demo Profile (Fullstack .NET / React)",
                 IsActive = true,
                 Title = "Senior Fullstack Software Engineer (.NET / React)",
+                Country = "France",
+                JobCategory = "software-dev",
                 YearsOfExperience = 5,
                 PreferredContracts = "CDI,Freelance/Contractor",
                 RemoteScopePreference = "Worldwide,Europe,France",

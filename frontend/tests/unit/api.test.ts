@@ -9,6 +9,7 @@ import {
   triggerSync,
   ingestAtsUrl,
   fetchProfiles,
+  fetchProfileTemplates,
   createProfile,
   updateProfile,
   activateProfile,
@@ -123,6 +124,11 @@ describe('API Client (src/api.ts)', () => {
     mockFetch.mockReturnValueOnce(mockJsonResponse([{ id: 1, name: 'Demo Profile' }]));
     const list = await fetchProfiles();
     expect(list).toHaveLength(1);
+
+    mockFetch.mockReturnValueOnce(mockJsonResponse([{ id: 'data', name: 'Data Scientist / AI Engineer' }]));
+    const templates = await fetchProfileTemplates();
+    expect(templates).toHaveLength(1);
+    expect(templates[0].id).toBe('data');
 
     mockFetch.mockReturnValueOnce(mockJsonResponse({ id: 2, name: 'New Profile' }));
     const created = await createProfile({ name: 'New Profile' });

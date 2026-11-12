@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Détection d'offres sans intermédiaire (HN, ATS direct, APIs) & matching IA depuis la France
+                Détection d'offres sans intermédiaire (HN, ATS directs, APIs) & matching IA multi-métiers / international
               </p>
             </div>
           </div>
@@ -178,7 +178,7 @@ export const Header: React.FC<HeaderProps> = ({
 
               <div className="flex items-center gap-1 bg-slate-800/50 px-2.5 py-1 rounded-md border border-slate-700/50">
                 <Globe2 className="h-3 w-3 text-emerald-400" />
-                <span>Éligibles France / Worldwide :</span>
+                <span>Compatible Localisation / EOR :</span>
                 <strong className="text-emerald-300 font-semibold">{stats.franceCompatible}</strong>
               </div>
 

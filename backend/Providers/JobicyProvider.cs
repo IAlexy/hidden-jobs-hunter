@@ -17,9 +17,10 @@ public class JobicyProvider : IJobProvider
     private readonly HttpClient _httpClient;
 
     public string Id => "Jobicy";
-    public string Name => "Jobicy (Remote Tech Worldwide)";
-    public string Description => "Flux de jobs tech à l'international, souvent ouverts aux contrats B2B dans le monde.";
+    public string Name => "Jobicy (Remote Worldwide Multi-Domaines)";
+    public string Description => "Flux de jobs remote à l'international (Engineering, Data, Design, Product, Marketing), ouverts aux contrats B2B/EOR.";
     public bool IsEnabledByDefault => true;
+    public string Industry { get; set; } = "engineering";
 
     public JobicyProvider(HttpClient httpClient)
     {
@@ -27,13 +28,18 @@ public class JobicyProvider : IJobProvider
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("HiddenJobsHunter/1.0");
     }
 
-    public async Task<List<JobOffer>> FetchJobsAsync(int limit = 50, CancellationToken ct = default)
+    public Task<List<JobOffer>> FetchJobsAsync(int limit = 50, CancellationToken ct = default)
+        => FetchJobsAsync(limit, Industry, ct);
+
+    public async Task<List<JobOffer>> FetchJobsAsync(int limit, string? categoryOrIndustry, CancellationToken ct = default)
     {
         var jobs = new List<JobOffer>();
 
         try
         {
-            var url = $"https://jobicy.com/api/v2/remote-jobs?count={limit}&industry=engineering";
+            var mappedIndustry = MapJobicyIndustry(categoryOrIndustry);
+            var industryQuery = string.IsNullOrEmpty(mappedIndustry) ? "" : $"&industry={mappedIndustry}";
+            var url = $"https://jobicy.com/api/v2/remote-jobs?count={limit}{industryQuery}";
             using var response = await _httpClient.GetAsync(url, ct);
             if (!response.IsSuccessStatusCode) return jobs;
 
@@ -117,9 +123,30 @@ public class JobicyProvider : IJobProvider
         return HtmlEntity.DeEntitize(doc.DocumentNode.InnerText).Trim();
     }
 
+    private static string MapJobicyIndustry(string? category)
+    {
+        return (category?.Trim().ToLowerInvariant()) switch
+        {
+            null or "" or "software-dev" or "devops" or "cybersecurity" or "engineering" => "engineering",
+            "all" => "",
+            "data" => "data-science",
+            "design" => "design-multimedia",
+            "product" => "management",
+            "marketing" => "marketing",
+            "sales" => "business",
+            _ => category.Trim().ToLowerInvariant()
+        };
+    }
+
     private static string ExtractTags(string text)
     {
-        var keywords = new[] { ".NET", "C#", "React", "TypeScript", "JavaScript", "ASP.NET", "Node", "Python", "Go", "Rust", "Azure", "AWS", "PostgreSQL", "Docker", "Fullstack", "Frontend", "Backend" };
+        var keywords = new[]
+        {
+            ".NET", "C#", "React", "TypeScript", "JavaScript", "ASP.NET", "Node", "Python", "Go", "Rust",
+            "Azure", "AWS", "GCP", "PostgreSQL", "SQL", "Docker", "Kubernetes", "Terraform", "Fullstack", "Frontend", "Backend",
+            "PyTorch", "TensorFlow", "LLM", "Machine Learning", "Pandas", "Spark", "Snowflake",
+            "Figma", "UX", "UI", "Product Discovery", "Scrum", "Roadmap", "SEO", "HubSpot", "Growth", "Pentest", "SIEM"
+        };
         var matches = keywords.Where(k => text.Contains(k, StringComparison.OrdinalIgnoreCase)).Take(6);
         return string.Join(", ", matches);
     }

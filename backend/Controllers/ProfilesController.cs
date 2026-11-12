@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HiddenJobsHunter.Api.Data;
@@ -13,6 +15,87 @@ namespace HiddenJobsHunter.Api.Controllers;
 [Route("api/[controller]")]
 public class ProfilesController : ControllerBase
 {
+    private static readonly IReadOnlyList<ProfileTemplateDto> BuiltInTemplates = new List<ProfileTemplateDto>
+    {
+        new(
+            Id: "software-dev",
+            Name: "Fullstack Software Engineer",
+            Title: "Senior Fullstack Software Engineer",
+            JobCategory: "software-dev",
+            YearsOfExperience: 5,
+            PrimarySkills: ".NET, C#, React, TypeScript, Node.js, PostgreSQL, REST APIs, GraphQL",
+            SecondarySkills: "Docker, AWS, Azure, Next.js, TailwindCSS, Redis, CI/CD",
+            PreferredContracts: "CDI,Freelance/Contractor",
+            ExpectedSalaryOrTjm: "CDI: 65k-85k€ / Freelance: 500-650€ TJM / International: $90k-$140k"
+        ),
+        new(
+            Id: "data",
+            Name: "Data Scientist / AI Engineer",
+            Title: "Senior Data Scientist & AI/ML Engineer",
+            JobCategory: "data",
+            YearsOfExperience: 5,
+            PrimarySkills: "Python, PyTorch, TensorFlow, LLM, RAG, Pandas, SQL, Spark, Machine Learning",
+            SecondarySkills: "Snowflake, dbt, Airflow, Docker, AWS, MLOps, Hugging Face",
+            PreferredContracts: "CDI,Freelance/Contractor",
+            ExpectedSalaryOrTjm: "CDI: 70k-95k€ / Freelance: 550-750€ TJM / International: $100k-$160k"
+        ),
+        new(
+            Id: "devops",
+            Name: "DevOps / Cloud Architect",
+            Title: "Senior DevOps & Cloud Platform Architect",
+            JobCategory: "devops",
+            YearsOfExperience: 6,
+            PrimarySkills: "Kubernetes, Terraform, AWS, GCP, Azure, Docker, CI/CD, Linux, Go",
+            SecondarySkills: "Prometheus, Grafana, Ansible, Helm, ArgoCD, Datadog, GitHub Actions",
+            PreferredContracts: "CDI,Freelance/Contractor",
+            ExpectedSalaryOrTjm: "CDI: 70k-90k€ / Freelance: 550-700€ TJM / International: $100k-$150k"
+        ),
+        new(
+            Id: "product",
+            Name: "Product Manager (Tech / SaaS)",
+            Title: "Senior Product Manager",
+            JobCategory: "product",
+            YearsOfExperience: 5,
+            PrimarySkills: "Product Discovery, Roadmap, Scrum, Agile, User Research, Product Strategy, SQL, A/B Testing",
+            SecondarySkills: "Jira, Notion, Linear, Figma, Amplitude, Mixpanel, Stakeholder Management",
+            PreferredContracts: "CDI,Freelance/Contractor",
+            ExpectedSalaryOrTjm: "CDI: 65k-85k€ / Freelance: 500-650€ TJM / International: $90k-$140k"
+        ),
+        new(
+            Id: "design",
+            Name: "UX/UI Product Designer",
+            Title: "Senior UX/UI Product Designer",
+            JobCategory: "design",
+            YearsOfExperience: 5,
+            PrimarySkills: "Figma, Design Systems, UX Research, Prototyping, Wireframing, UI Design, Usability Testing",
+            SecondarySkills: "Framer, Webflow, HTML, CSS, Accessibility, Workshop Facilitation",
+            PreferredContracts: "CDI,Freelance/Contractor",
+            ExpectedSalaryOrTjm: "CDI: 55k-75k€ / Freelance: 450-600€ TJM / International: $80k-$125k"
+        ),
+        new(
+            Id: "marketing",
+            Name: "Growth & Digital Marketing",
+            Title: "Head of Growth & Product Marketing",
+            JobCategory: "marketing",
+            YearsOfExperience: 5,
+            PrimarySkills: "Growth Hacking, SEO, SEM, HubSpot, Google Analytics, Copywriting, CRM, Demand Generation",
+            SecondarySkills: "Product Marketing, Content Strategy, Paid Social, Email Automation, A/B Testing",
+            PreferredContracts: "CDI,Freelance/Contractor",
+            ExpectedSalaryOrTjm: "CDI: 55k-80k€ / Freelance: 450-600€ TJM / International: $80k-$130k"
+        ),
+        new(
+            Id: "cybersecurity",
+            Name: "Cybersecurity / SecOps Engineer",
+            Title: "Senior Cybersecurity & SecOps Engineer",
+            JobCategory: "cybersecurity",
+            YearsOfExperience: 6,
+            PrimarySkills: "Pentest, SOC, SIEM, Zero Trust, Cloud Security, AppSec, IAM, Incident Response",
+            SecondarySkills: "ISO 27001, SOC2, AWS Security, Kubernetes, Python, Threat Hunting",
+            PreferredContracts: "CDI,Freelance/Contractor",
+            ExpectedSalaryOrTjm: "CDI: 70k-95k€ / Freelance: 600-800€ TJM / International: $100k-$155k"
+        )
+    };
+
     private readonly AppDbContext _db;
     private readonly IAiMatcherService _aiService;
 
@@ -20,6 +103,13 @@ public class ProfilesController : ControllerBase
     {
         _db = db;
         _aiService = aiService;
+    }
+
+    [HttpGet("templates")]
+    [ProducesResponseType(typeof(IEnumerable<ProfileTemplateDto>), StatusCodes.Status200OK)]
+    public IActionResult GetProfileTemplates()
+    {
+        return Ok(BuiltInTemplates);
     }
 
     [HttpGet]
@@ -32,6 +122,8 @@ public class ProfilesController : ControllerBase
                 p.Name,
                 p.IsActive,
                 p.Title,
+                p.Country,
+                p.JobCategory,
                 p.YearsOfExperience,
                 p.PreferredContracts,
                 p.RemoteScopePreference,
@@ -101,6 +193,8 @@ public class ProfilesController : ControllerBase
 
         profile.Name = updated.Name;
         profile.Title = updated.Title;
+        profile.Country = string.IsNullOrWhiteSpace(updated.Country) ? profile.Country : updated.Country;
+        profile.JobCategory = string.IsNullOrWhiteSpace(updated.JobCategory) ? profile.JobCategory : updated.JobCategory;
         profile.YearsOfExperience = updated.YearsOfExperience;
         profile.PreferredContracts = updated.PreferredContracts;
         profile.RemoteScopePreference = updated.RemoteScopePreference;
@@ -175,3 +269,15 @@ public class ProfilesController : ControllerBase
 }
 
 public record ParseCvRequest(string? CvText = null, string? ResumeText = null, string? ProfileName = null);
+
+public record ProfileTemplateDto(
+    string Id,
+    string Name,
+    string Title,
+    string JobCategory,
+    int YearsOfExperience,
+    string PrimarySkills,
+    string SecondarySkills,
+    string PreferredContracts,
+    string ExpectedSalaryOrTjm
+);

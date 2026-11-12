@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   User, 
@@ -8,10 +8,91 @@ import {
   Trash2, 
   Save, 
   FileText,
-  Globe
+  Globe,
+  Briefcase
 } from 'lucide-react';
-import { UserProfile } from '../types';
-import { createProfile, updateProfile, deleteProfile, activateProfile, parseCvWithAi } from '../api';
+import { ProfileTemplate, UserProfile } from '../types';
+import { createProfile, updateProfile, deleteProfile, activateProfile, parseCvWithAi, fetchProfileTemplates } from '../api';
+
+const FALLBACK_TEMPLATES: ProfileTemplate[] = [
+  {
+    id: 'software-dev',
+    name: 'Fullstack Software Engineer',
+    title: 'Senior Fullstack Software Engineer',
+    jobCategory: 'software-dev',
+    yearsOfExperience: 5,
+    primarySkills: '.NET, C#, React, TypeScript, Node.js, PostgreSQL, REST APIs, GraphQL',
+    secondarySkills: 'Docker, AWS, Azure, Next.js, TailwindCSS, Redis, CI/CD',
+    preferredContracts: 'CDI,Freelance/Contractor',
+    expectedSalaryOrTjm: 'CDI: 65k-85k€ / Freelance: 500-650€ TJM / International: $90k-$140k',
+  },
+  {
+    id: 'data',
+    name: 'Data Scientist / AI Engineer',
+    title: 'Senior Data Scientist & AI/ML Engineer',
+    jobCategory: 'data',
+    yearsOfExperience: 5,
+    primarySkills: 'Python, PyTorch, TensorFlow, LLM, RAG, Pandas, SQL, Spark, Machine Learning',
+    secondarySkills: 'Snowflake, dbt, Airflow, Docker, AWS, MLOps, Hugging Face',
+    preferredContracts: 'CDI,Freelance/Contractor',
+    expectedSalaryOrTjm: 'CDI: 70k-95k€ / Freelance: 550-750€ TJM / International: $100k-$160k',
+  },
+  {
+    id: 'devops',
+    name: 'DevOps / Cloud Architect',
+    title: 'Senior DevOps & Cloud Platform Architect',
+    jobCategory: 'devops',
+    yearsOfExperience: 6,
+    primarySkills: 'Kubernetes, Terraform, AWS, GCP, Azure, Docker, CI/CD, Linux, Go',
+    secondarySkills: 'Prometheus, Grafana, Ansible, Helm, ArgoCD, Datadog, GitHub Actions',
+    preferredContracts: 'CDI,Freelance/Contractor',
+    expectedSalaryOrTjm: 'CDI: 70k-90k€ / Freelance: 550-700€ TJM / International: $100k-$150k',
+  },
+  {
+    id: 'product',
+    name: 'Product Manager (Tech / SaaS)',
+    title: 'Senior Product Manager',
+    jobCategory: 'product',
+    yearsOfExperience: 5,
+    primarySkills: 'Product Discovery, Roadmap, Scrum, Agile, User Research, Product Strategy, SQL, A/B Testing',
+    secondarySkills: 'Jira, Notion, Linear, Figma, Amplitude, Mixpanel, Stakeholder Management',
+    preferredContracts: 'CDI,Freelance/Contractor',
+    expectedSalaryOrTjm: 'CDI: 65k-85k€ / Freelance: 500-650€ TJM / International: $90k-$140k',
+  },
+  {
+    id: 'design',
+    name: 'UX/UI Product Designer',
+    title: 'Senior UX/UI Product Designer',
+    jobCategory: 'design',
+    yearsOfExperience: 5,
+    primarySkills: 'Figma, Design Systems, UX Research, Prototyping, Wireframing, UI Design, Usability Testing',
+    secondarySkills: 'Framer, Webflow, HTML, CSS, Accessibility, Workshop Facilitation',
+    preferredContracts: 'CDI,Freelance/Contractor',
+    expectedSalaryOrTjm: 'CDI: 55k-75k€ / Freelance: 450-600€ TJM / International: $80k-$125k',
+  },
+  {
+    id: 'marketing',
+    name: 'Growth & Digital Marketing',
+    title: 'Head of Growth & Product Marketing',
+    jobCategory: 'marketing',
+    yearsOfExperience: 5,
+    primarySkills: 'Growth Hacking, SEO, SEM, HubSpot, Google Analytics, Copywriting, CRM, Demand Generation',
+    secondarySkills: 'Product Marketing, Content Strategy, Paid Social, Email Automation, A/B Testing',
+    preferredContracts: 'CDI,Freelance/Contractor',
+    expectedSalaryOrTjm: 'CDI: 55k-80k€ / Freelance: 450-600€ TJM / International: $80k-$130k',
+  },
+  {
+    id: 'cybersecurity',
+    name: 'Cybersecurity / SecOps Engineer',
+    title: 'Senior Cybersecurity & SecOps Engineer',
+    jobCategory: 'cybersecurity',
+    yearsOfExperience: 6,
+    primarySkills: 'Pentest, SOC, SIEM, Zero Trust, Cloud Security, AppSec, IAM, Incident Response',
+    secondarySkills: 'ISO 27001, SOC2, AWS Security, Kubernetes, Python, Threat Hunting',
+    preferredContracts: 'CDI,Freelance/Contractor',
+    expectedSalaryOrTjm: 'CDI: 70k-95k€ / Freelance: 600-800€ TJM / International: $100k-$155k',
+  },
+];
 
 interface ProfileManagerModalProps {
   isOpen: boolean;
@@ -32,24 +113,60 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [isParsingCv, setIsParsingCv] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [templates, setTemplates] = useState<ProfileTemplate[]>(FALLBACK_TEMPLATES);
 
   // Form State
   const [formData, setFormData] = useState<Partial<UserProfile>>({
-    name: '',
-    title: 'Fullstack Software Engineer',
-    yearsOfExperience: 5,
-    preferredContracts: 'CDI,Freelance/Contractor',
-    remoteScopePreference: 'Worldwide,Europe,France',
-    canWorkAsContractorB2B: true,
-    primarySkills: '.NET, C#, React, TypeScript, ASP.NET Core',
-    secondarySkills: 'Docker, Azure, SQL, CI/CD',
-    languages: 'Français (natif), Anglais (bilingue)',
-    expectedSalaryOrTjm: 'CDI: 65k-85k€ / Freelance: 500-650€ TJM',
-    preferredPitchLanguage: 'Auto',
-    resumeText: '',
+    name: activeProfile?.name || '',
+    title: activeProfile?.title || 'Fullstack Software Engineer',
+    country: activeProfile?.country || 'France',
+    jobCategory: activeProfile?.jobCategory || 'software-dev',
+    yearsOfExperience: activeProfile?.yearsOfExperience ?? 5,
+    preferredContracts: activeProfile?.preferredContracts || 'CDI,Freelance/Contractor',
+    remoteScopePreference: activeProfile?.remoteScopePreference || 'Worldwide,Europe,France',
+    canWorkAsContractorB2B: activeProfile?.canWorkAsContractorB2B ?? true,
+    primarySkills: activeProfile?.primarySkills || '.NET, C#, React, TypeScript, ASP.NET Core',
+    secondarySkills: activeProfile?.secondarySkills || 'Docker, Azure, SQL, CI/CD',
+    languages: activeProfile?.languages || 'Français (natif), Anglais (bilingue)',
+    expectedSalaryOrTjm: activeProfile?.expectedSalaryOrTjm || 'CDI: 65k-85k€ / Freelance: 500-650€ TJM',
+    preferredPitchLanguage: activeProfile?.preferredPitchLanguage || 'Auto',
+    resumeText: activeProfile?.resumeText || '',
   });
 
+  useEffect(() => {
+    if (!isOpen) return;
+    let mounted = true;
+    fetchProfileTemplates()
+      .then((res) => {
+        if (mounted && Array.isArray(res) && res.length > 0) {
+          setTemplates(res);
+        }
+      })
+      .catch(() => {
+        // Fallback templates already loaded
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const handleApplyTemplate = (templateId: string) => {
+    const tpl = templates.find((t) => t.id === templateId);
+    if (!tpl) return;
+    setFormData((prev) => ({
+      ...prev,
+      name: isCreatingNew || !prev.name ? `Profil ${tpl.name}` : prev.name,
+      title: tpl.title,
+      jobCategory: tpl.jobCategory,
+      yearsOfExperience: tpl.yearsOfExperience,
+      primarySkills: tpl.primarySkills,
+      secondarySkills: tpl.secondarySkills,
+      preferredContracts: tpl.preferredContracts,
+      expectedSalaryOrTjm: tpl.expectedSalaryOrTjm,
+    }));
+  };
 
   const handleSelectProfile = (p: UserProfile) => {
     setIsCreatingNew(false);
@@ -63,8 +180,10 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
     setIsCreatingNew(true);
     setSelectedProfileId(null);
     setFormData({
-      name: 'Nouveau profil (Ami / Autre spécialité)',
+      name: 'Nouveau profil (Autre métier / Spécialité)',
       title: 'Software Engineer',
+      country: 'France',
+      jobCategory: 'software-dev',
       yearsOfExperience: 3,
       preferredContracts: 'CDI,Freelance/Contractor',
       remoteScopePreference: 'Worldwide,Europe,France',
@@ -258,7 +377,7 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
                   {isCreatingNew ? 'Nouveau Profil' : `Modifier: ${formData.name}`}
                 </h4>
                 <p className="text-xs text-slate-400">
-                  Définissez vos critères de recherche (stack, expérience, contraintes remote depuis la France)
+                  Définissez vos critères de recherche (métier, compétences, pays de résidence, modalités remote)
                 </p>
               </div>
 
@@ -271,6 +390,32 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
                   <span>Définir comme profil actif</span>
                 </button>
               )}
+            </div>
+
+            {/* 1-Click Profession Template Selector */}
+            <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                  <Briefcase className="h-3.5 w-3.5" />
+                  <span>Charger un modèle de métier (Template 1-clic) :</span>
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {templates.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => handleApplyTemplate(tpl.id)}
+                    className={`text-[11px] font-medium px-2.5 py-1 rounded-lg border transition ${
+                      formData.jobCategory === tpl.jobCategory && formData.title === tpl.title
+                        ? 'bg-emerald-600/25 border-emerald-500/50 text-emerald-300'
+                        : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                    }`}
+                  >
+                    {tpl.name}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* CV Text Area with AI Parse CTA */}
@@ -317,7 +462,39 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
                   type="text"
                   value={formData.title || ''}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Ex: Senior Fullstack Software Engineer"
+                  placeholder="Ex: Senior Fullstack Engineer, Data Scientist, Product Manager..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Domaine / Catégorie de métier :</label>
+                <select
+                  aria-label="Domaine ou catégorie de métier"
+                  value={formData.jobCategory || 'software-dev'}
+                  onChange={(e) => setFormData({ ...formData, jobCategory: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:border-emerald-500"
+                >
+                  <option value="software-dev">Software Engineering (Fullstack, Backend, Frontend)</option>
+                  <option value="data">Data Science, Machine Learning & IA</option>
+                  <option value="devops">DevOps, SRE & Cloud Infrastructure</option>
+                  <option value="product">Product Management & Agile</option>
+                  <option value="design">UX/UI & Product Design</option>
+                  <option value="marketing">Growth, Digital & Product Marketing</option>
+                  <option value="sales">Sales, Business Development & Account Exec</option>
+                  <option value="cybersecurity">Cybersecurity & SecOps</option>
+                  <option value="all">Tous domaines confondus</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Pays de résidence :</label>
+                <input
+                  type="text"
+                  aria-label="Pays de résidence"
+                  value={formData.country || 'France'}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  placeholder="Ex: France, Canada, Switzerland, Belgium, United Kingdom..."
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 focus:border-emerald-500"
                 />
               </div>
@@ -390,11 +567,11 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
               </div>
             </div>
 
-            {/* France Remote Specifics */}
+            {/* International Remote & B2B Specifics */}
             <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-2 text-xs">
               <span className="font-semibold text-teal-300 flex items-center gap-1.5">
                 <Globe className="h-4 w-4" />
-                Compatibilité administrative & Remote international
+                Compatibilité administrative & Remote international ({formData.country || 'France'})
               </span>
               <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
                 <input
@@ -404,7 +581,7 @@ export const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
                   className="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0"
                 />
                 <span>
-                  <strong>Peut facturer en tant que prestataire B2B (Auto-entrepreneur / Société)</strong> : permet de travailler légalement pour n'importe quelle entreprise dans le monde sans qu'elle n'ait besoin d'entité en France.
+                  <strong>Peut facturer en tant que prestataire B2B (Indépendant / Société) ou via EOR</strong> : permet de travailler légalement pour n'importe quelle entreprise internationale sans qu'elle n'ait besoin d'entité locale dans votre pays.
                 </span>
               </label>
             </div>

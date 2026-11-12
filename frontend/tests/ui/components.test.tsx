@@ -7,6 +7,7 @@ import { KanbanView } from '../../src/components/KanbanView';
 import { IngestUrlModal } from '../../src/components/IngestUrlModal';
 import { PitchModal } from '../../src/components/PitchModal';
 import { SettingsModal } from '../../src/components/SettingsModal';
+import { ProfileManagerModal } from '../../src/components/ProfileManagerModal';
 import { JobOffer, StatsData, UserProfile } from '../../src/types';
 import * as api from '../../src/api';
 
@@ -16,6 +17,12 @@ vi.mock('../../src/api', () => ({
   fetchSettings: vi.fn(),
   updateSettings: vi.fn(),
   testAiConnection: vi.fn(),
+  fetchProfileTemplates: vi.fn(),
+  createProfile: vi.fn(),
+  updateProfile: vi.fn(),
+  deleteProfile: vi.fn(),
+  activateProfile: vi.fn(),
+  parseCvWithAi: vi.fn(),
 }));
 
 const sampleProfile: UserProfile = {
@@ -263,5 +270,29 @@ describe('UI Components Suite', () => {
       expect(api.updateSettings).toHaveBeenCalled();
       expect(screen.getByText(/Paramètres enregistrés avec succès/i)).toBeInTheDocument();
     });
+  });
+
+  it('ProfileManagerModal applies 1-click profession templates and edits country/category', async () => {
+    vi.mocked(api.fetchProfileTemplates).mockResolvedValueOnce([]);
+    const onClose = vi.fn();
+    const onRefreshProfiles = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ProfileManagerModal
+        isOpen={true}
+        onClose={onClose}
+        profiles={[sampleProfile]}
+        activeProfile={sampleProfile}
+        onRefreshProfiles={onRefreshProfiles}
+      />
+    );
+
+    expect(screen.getByText(/Charger un modèle de métier/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Data Scientist / AI Engineer'));
+
+    expect(screen.getByDisplayValue('Senior Data Scientist & AI/ML Engineer')).toBeInTheDocument();
+    const countryInput = screen.getByLabelText('Pays de résidence') as HTMLInputElement;
+    fireEvent.change(countryInput, { target: { value: 'Canada' } });
+    expect(countryInput.value).toBe('Canada');
   });
 });

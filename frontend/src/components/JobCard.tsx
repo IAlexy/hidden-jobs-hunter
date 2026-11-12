@@ -84,7 +84,7 @@ export const JobCard: React.FC<JobCardProps> = ({
             {job.isFranceCompatible && (
               <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-teal-500/15 text-teal-300 border border-teal-500/25">
                 <CheckCircle2 className="h-3 w-3" />
-                Éligible France
+                Compatible Remote / EOR
               </span>
             )}
 

@@ -53,6 +53,18 @@ public class JobSyncService
         {
             try
             {
+                if (activeProfile != null && !string.IsNullOrWhiteSpace(activeProfile.JobCategory))
+                {
+                    if (provider is RemotiveProvider remotiveProvider)
+                    {
+                        remotiveProvider.Category = activeProfile.JobCategory;
+                    }
+                    else if (provider is JobicyProvider jobicyProvider)
+                    {
+                        jobicyProvider.Industry = activeProfile.JobCategory;
+                    }
+                }
+
                 _logger.LogInformation("Syncing provider {ProviderName}...", provider.Name);
                 var jobs = await provider.FetchJobsAsync(50, ct);
                 totalFetched += jobs.Count;

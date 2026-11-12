@@ -176,9 +176,11 @@ public class AiMatcherService : IAiMatcherService
 
     private static string BuildResumeParsingPrompt(string cvText)
     {
-        return $@"Tu es un expert en recrutement tech. Analyse le CV / profil ci-dessous et retourne UNIQUEMENT un objet JSON avec ces clés :
+        return $@"Tu es un expert en recrutement international multi-métiers (Tech, Data/IA, Produit, Design, Marketing, Cybersécurité). Analyse le CV / profil ci-dessous et retourne UNIQUEMENT un objet JSON avec ces clés :
 {{
-  ""title"": ""Titre professionnel (ex: Senior Fullstack Engineer)"",
+  ""title"": ""Titre professionnel (ex: Senior Fullstack Engineer, Data Scientist, Product Manager)"",
+  ""country"": ""Pays de résidence (ex: France, Canada, Switzerland, Belgium, United Kingdom)"",
+  ""jobCategory"": ""software-dev | data | devops | product | design | marketing | sales | cybersecurity | all"",
   ""yearsOfExperience"": 5,
   ""primarySkills"": ""Compétences clés séparées par des virgules"",
   ""secondarySkills"": ""Compétences secondaires séparées par des virgules"",
@@ -202,6 +204,8 @@ CV :
         if (root.ValueKind != JsonValueKind.Object) return false;
 
         if (root.TryGetProperty("title", out var t)) profile.Title = t.GetString() ?? profile.Title;
+        if (root.TryGetProperty("country", out var c) && !string.IsNullOrWhiteSpace(c.GetString())) profile.Country = c.GetString()!;
+        if (root.TryGetProperty("jobCategory", out var jc) && !string.IsNullOrWhiteSpace(jc.GetString())) profile.JobCategory = jc.GetString()!;
         if (root.TryGetProperty("yearsOfExperience", out var y) && y.ValueKind == JsonValueKind.Number) profile.YearsOfExperience = y.GetInt32();
         if (root.TryGetProperty("primarySkills", out var ps)) profile.PrimarySkills = ps.GetString() ?? profile.PrimarySkills;
         if (root.TryGetProperty("secondarySkills", out var ss)) profile.SecondarySkills = ss.GetString() ?? profile.SecondarySkills;
@@ -215,32 +219,63 @@ CV :
     private static JobMatch MatchWithHeuristic(JobOffer job, UserProfile profile)
     {
         var jobFullText = $"{job.Title} {job.Company} {job.Description} {job.Tags} {job.Location}".ToLowerInvariant();
+        var country = string.IsNullOrWhiteSpace(profile.Country) ? "France" : profile.Country.Trim();
+        var title = string.IsNullOrWhiteSpace(profile.Title) ? "Specialist" : profile.Title.Trim();
 
-        // 1. Tech Stack Fit
-        var profileSkills = (profile.PrimarySkills + "," + profile.SecondarySkills)
+        // 1. Domain & Skill Fit (100% stack-agnostic across Tech, Data, Product, Design, Marketing, SecOps)
+        var primarySkills = profile.PrimarySkills
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(s => s.ToLowerInvariant())
             .Distinct()
             .ToList();
 
-        var matchedSkills = new List<string>();
+        var secondarySkills = profile.SecondarySkills
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(s => s.ToLowerInvariant())
+            .Except(primarySkills)
+            .Distinct()
+            .ToList();
+
+        var profileSkills = primarySkills.Concat(secondarySkills).Distinct().ToList();
+
+        var matchedPrimary = new List<string>();
+        var matchedSecondary = new List<string>();
         var missingSkills = new List<string>();
 
-        foreach (var skill in profileSkills)
+        foreach (var skill in primarySkills)
         {
             if (skill.Length < 2) continue;
             var pattern = $@"(?<!\w){Regex.Escape(skill)}(?!\w)";
             if (Regex.IsMatch(jobFullText, pattern, RegexOptions.IgnoreCase, RegexTimeout))
             {
-                matchedSkills.Add(skill);
+                matchedPrimary.Add(skill);
             }
         }
 
-        // Detect skills mentioned in job tags/description that are not in profile
+        foreach (var skill in secondarySkills)
+        {
+            if (skill.Length < 2) continue;
+            var pattern = $@"(?<!\w){Regex.Escape(skill)}(?!\w)";
+            if (Regex.IsMatch(jobFullText, pattern, RegexOptions.IgnoreCase, RegexTimeout))
+            {
+                matchedSecondary.Add(skill);
+            }
+        }
+
+        var matchedSkills = matchedPrimary.Concat(matchedSecondary).ToList();
+
+        // Multi-domain skill dictionary to identify requirements mentioned in the job offer but missing from profile
         var jobSkillCandidates = new[]
         {
+            // Software Engineering
             ".net", "c#", "react", "typescript", "python", "go", "golang", "rust", "java", "kotlin",
-            "kubernetes", "aws", "gcp", "azure", "docker", "postgresql", "graphql", "vue", "angular"
+            "vue", "angular", "node.js", "graphql", "postgresql",
+            // Cloud, DevOps & SecOps
+            "kubernetes", "aws", "gcp", "azure", "docker", "terraform", "ansible", "pentest", "siem",
+            // Data & AI
+            "pytorch", "tensorflow", "llm", "pandas", "spark", "snowflake", "dbt", "machine learning",
+            // Product, Design & Growth
+            "figma", "design systems", "ux research", "product discovery", "scrum", "seo", "hubspot"
         };
         foreach (var candidate in jobSkillCandidates)
         {
@@ -252,55 +287,85 @@ CV :
             }
         }
 
-        // Check common stack markers
-        bool jobIsDotNet = jobFullText.Contains(".net") || jobFullText.Contains("c#") || jobFullText.Contains("asp.net");
-        bool jobIsReact = jobFullText.Contains("react") || jobFullText.Contains("typescript") || jobFullText.Contains("frontend");
-        bool jobIsFullstack = jobFullText.Contains("fullstack") || jobFullText.Contains("full stack") || (jobIsDotNet && jobIsReact);
-
-        bool profileHasDotNet = profileSkills.Any(s => s.Contains(".net") || s.Contains("c#"));
-        bool profileHasReact = profileSkills.Any(s => s.Contains("react") || s.Contains("typescript"));
-
-        int techScore = 40;
-        if (matchedSkills.Count > 0)
+        // Check role/title keyword alignment generically across any profession
+        var stopWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            techScore = Math.Min(95, 45 + (matchedSkills.Count * 12));
+            "senior", "junior", "lead", "staff", "principal", "head", "of", "and", "or", "the", "de", "du", "des", "en"
+        };
+        var titleTokens = Regex.Split(title.ToLowerInvariant(), @"[\s/,()\-]+", RegexOptions.None, RegexTimeout)
+            .Where(tok => tok.Length >= 3 && !stopWords.Contains(tok))
+            .Distinct()
+            .ToList();
+
+        int matchedTitleTokens = titleTokens.Count(tok => jobFullText.Contains(tok, StringComparison.OrdinalIgnoreCase));
+
+        int techScore = 35;
+        if (matchedSkills.Count > 0 || matchedTitleTokens > 0)
+        {
+            int primaryPoints = matchedPrimary.Count * 16;
+            int secondaryPoints = matchedSecondary.Count * 9;
+            int titlePoints = Math.Min(20, matchedTitleTokens * 8);
+
+            double ratioBonus = primarySkills.Count > 0
+                ? ((double)matchedPrimary.Count / Math.Min(primarySkills.Count, 5)) * 15.0
+                : 0.0;
+
+            techScore = (int)Math.Round(38 + primaryPoints + secondaryPoints + titlePoints + ratioBonus);
         }
-        if (jobIsDotNet && profileHasDotNet) techScore += 15;
-        if (jobIsReact && profileHasReact) techScore += 15;
-        if (jobIsFullstack && profileHasDotNet && profileHasReact) techScore += 5;
         techScore = Math.Clamp(techScore, 20, 98);
 
-        // 2. Remote & Administrative Fit from France
+        // 2. Remote & Administrative Fit according to candidate's Country and RemoteScopePreference
         int remoteScore;
         string adminFeasibility;
 
+        bool candidateInNorthAmerica = IsNorthAmericanCountry(country);
+        bool candidateInEurope = IsEuropeanCountry(country);
+
         bool isWorldwide = job.RemoteScope.Equals("Worldwide", StringComparison.OrdinalIgnoreCase) ||
-                           jobFullText.Contains("worldwide") || jobFullText.Contains("anywhere");
+                           jobFullText.Contains("worldwide") || jobFullText.Contains("anywhere") || jobFullText.Contains("global");
         bool isEurope = job.RemoteScope.Equals("Europe", StringComparison.OrdinalIgnoreCase) ||
-                        jobFullText.Contains("europe") || jobFullText.Contains("emea") || jobFullText.Contains("france");
+                        jobFullText.Contains("europe") || jobFullText.Contains("emea") || jobFullText.Contains("france") ||
+                        jobFullText.Contains(country.ToLowerInvariant());
         bool isUsOnly = !job.IsFranceCompatible ||
                         job.RemoteScope.Equals("US-Only", StringComparison.OrdinalIgnoreCase) ||
-                        jobFullText.Contains("us only") || jobFullText.Contains("united states only");
+                        jobFullText.Contains("us only") || jobFullText.Contains("united states only") ||
+                        jobFullText.Contains("north america only");
 
         if (isUsOnly)
         {
-            remoteScore = 25;
-            adminFeasibility = "Offre avec forte restriction géographique US/Canada. Possible uniquement si l'entreprise accepte une dispense de visa via contrat B2B freelance.";
+            if (candidateInNorthAmerica)
+            {
+                remoteScore = 92;
+                adminFeasibility = $"Excellente compatibilité géographique ({country}) avec la zone Amérique du Nord / US demandée par l'offre.";
+            }
+            else
+            {
+                remoteScore = 25;
+                adminFeasibility = $"Offre avec forte restriction géographique US/Canada (votre localisation : {country}). Possible uniquement si l'entreprise accepte une dispense de visa via contrat B2B freelance.";
+            }
         }
-        else if (isEurope || jobFullText.Contains("france"))
+        else if (isEurope)
         {
-            remoteScore = 95;
-            adminFeasibility = "Excellente compatibilité : fuseau horaire CET / Europe. Éligible en CDI (si entité en France ou via portage/Deel/Remote) ou en Freelance B2B.";
+            if (candidateInEurope || jobFullText.Contains(country.ToLowerInvariant()))
+            {
+                remoteScore = 95;
+                adminFeasibility = $"Excellente compatibilité depuis {country} : fuseau horaire CET / Europe. Éligible en CDI (entité locale ou via portage/EOR type Deel/Remote) ou en Freelance B2B.";
+            }
+            else
+            {
+                remoteScore = 70;
+                adminFeasibility = $"Offre ciblant prioritairement le fuseau Europe/EMEA. À valider depuis {country} (collaboration en Freelance B2B ou EOR avec horaires adaptés).";
+            }
         }
         else if (isWorldwide)
         {
             remoteScore = 90;
-            adminFeasibility = "Poste ouvert à l'international / Worldwide. Idéal pour travailler depuis la France en contrat B2B (facturation auto-entrepreneur / société) ou via EOR.";
+            adminFeasibility = $"Poste ouvert à l'international / Worldwide. Idéal pour travailler depuis {country} en contrat B2B (facturation indépendante / société) ou via EOR (Deel, Remote.com).";
         }
         else
         {
             remoteScore = 75;
-            adminFeasibility = "Poste remote. À valider lors du premier contact : ouverture aux résidents fiscaux français en B2B Contractor ou EOR.";
+            adminFeasibility = $"Poste remote. À valider lors du premier contact : ouverture aux résidents basés en {country} en B2B Contractor ou EOR.";
         }
 
         // 3. Overall Match Score
@@ -316,9 +381,9 @@ CV :
         {
             strengths.Add($"Expérience solide ({profile.YearsOfExperience} ans) idéale pour l'autonomie requise en full remote");
         }
-        if (isWorldwide || isEurope)
+        if (remoteScore >= 85)
         {
-            strengths.Add("Localisation en France compatible avec la politique remote de l'entreprise");
+            strengths.Add($"Localisation ({country}) compatible avec la politique remote de l'entreprise");
         }
         if (job.DirectContact != null)
         {
@@ -327,7 +392,7 @@ CV :
 
         if (matchedSkills.Count < 2)
         {
-            missingSkills.Add("Certaines technos spécifiques demandées ne figurent pas explicitement dans votre profil principal");
+            missingSkills.Add("Certaines compétences spécifiques demandées ne figurent pas explicitement dans votre profil principal");
         }
         if (jobFullText.Contains("senior") && profile.YearsOfExperience < 5)
         {
@@ -341,7 +406,7 @@ CV :
             MatchScore = overallScore,
             TechStackFit = techScore,
             RemoteEligibilityFit = remoteScore,
-            Summary = $"Match à {overallScore}% basé sur votre profil ({profile.Title}) et les critères de l'offre.",
+            Summary = $"Match à {overallScore}% basé sur votre profil ({title} - {country}) et les critères de l'offre.",
             StrengthsJson = JsonSerializer.Serialize(strengths),
             MissingSkillsJson = JsonSerializer.Serialize(missingSkills),
             AdministrativeFeasibility = adminFeasibility,
@@ -349,6 +414,21 @@ CV :
             AiProviderUsed = "Heuristic",
             AnalyzedAt = DateTime.UtcNow
         };
+    }
+
+    private static bool IsNorthAmericanCountry(string country)
+    {
+        var c = country.Trim().ToLowerInvariant();
+        return c is "united states" or "usa" or "us" or "états-unis" or "etats-unis" or "canada" or "mexico" or "mexique";
+    }
+
+    private static bool IsEuropeanCountry(string country)
+    {
+        var c = country.Trim().ToLowerInvariant();
+        return c is "france" or "belgium" or "belgique" or "switzerland" or "suisse" or "united kingdom" or "uk" or "royaume-uni"
+            or "germany" or "allemagne" or "spain" or "espagne" or "italy" or "italie" or "netherlands" or "pays-bas"
+            or "portugal" or "ireland" or "irlande" or "luxembourg" or "poland" or "pologne" or "sweden" or "suède"
+            or "austria" or "autriche" or "denmark" or "danemark" or "norway" or "norvège" or "finland" or "finlande";
     }
 
     private static string GenerateHeuristicPitch(JobOffer job, UserProfile profile, string? customInstructions)
@@ -366,8 +446,10 @@ CV :
 
         bool isEnglish = forceEnglish || (!forceFrench && !isFrenchDescription);
 
-        var skills = profile.PrimarySkills.Split(',', StringSplitOptions.TrimEntries).Take(4).ToList();
-        var skillsStr = string.Join(", ", skills);
+        var title = string.IsNullOrWhiteSpace(profile.Title) ? "Specialist" : profile.Title.Trim();
+        var country = string.IsNullOrWhiteSpace(profile.Country) ? "France" : profile.Country.Trim();
+        var skills = profile.PrimarySkills.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Take(4).ToList();
+        var skillsStr = skills.Count > 0 ? string.Join(", ", skills) : title;
         var extraNote = string.IsNullOrWhiteSpace(customInstructions) ? string.Empty : $"\n\nNote: {customInstructions.Trim()}";
 
         if (isEnglish)
@@ -376,35 +458,36 @@ CV :
 
 I came across your opening for the {job.Title} role and was immediately excited by what you are building.
 
-With ~{profile.YearsOfExperience} years of experience as a Fullstack Software Engineer specializing in {skillsStr}, I have a proven track record of architecting scalable backend services and responsive user experiences in fully distributed, autonomous environments.
+With ~{profile.YearsOfExperience} years of experience as a {title} specializing in {skillsStr}, I have a proven track record of delivering high-impact results in fully distributed, autonomous environments.
 
 Key highlights regarding your requirements:
-• Stack alignment: deep hands-on expertise in {skillsStr}.
-• Remote autonomy: fully set up for 100% remote collaboration from France (CET timezone, bilingual English/French).
+• Core expertise: deep hands-on proficiency in {skillsStr}.
+• Remote autonomy: fully set up for 100% remote collaboration from {country} ({profile.Languages}).
 • Administrative flexibility: fully eligible and ready to collaborate either via direct B2B contractor invoicing or through an EOR platform (such as Deel / Remote.com).{extraNote}
 
 I would love to have a brief 15-minute chat to discuss how I can contribute to {job.Company}'s goals this quarter.
 
 Best regards,
 {profile.Name}
-Fullstack Software Engineer";
+{title}";
         }
 
         return $@"Bonjour l'équipe {job.Company},
 
-J'ai repéré votre opportunité pour le poste de {job.Title} et le challenge technique m'a tout de suite interpellé.
+J'ai repéré votre opportunité pour le poste de {job.Title} et vos enjeux m'ont tout de suite interpellé.
 
-Avec près de {profile.YearsOfExperience} ans d'expérience en tant qu'ingénieur logiciel Fullstack ({skillsStr}), j'ai développé une solide expertise dans la conception d'architectures résilientes et d'interfaces fluides au sein d'équipes agiles 100% distribuées.
+Avec près de {profile.YearsOfExperience} ans d'expérience en tant que {title} ({skillsStr}), j'ai développé une solide expertise opérationnelle au sein d'équipes agiles 100% distribuées.
 
 Ce que je peux apporter immédiatement :
-• Maîtrise technique : expérience approfondie sur {skillsStr}.
-• Travail à distance éprouvé : 100% autonome en full remote depuis la France, bilingue anglais/français.
+• Compétences clés : maîtrise approfondie sur {skillsStr}.
+• Travail à distance éprouvé : 100% autonome en full remote depuis {country} ({profile.Languages}).
 • Souplesse contractuelle : ouvert en CDI (direct ou portage/EOR) ou en prestation freelance / B2B selon ce qui vous arrange.{extraNote}
 
-Seriez-vous ouvert à un rapide échange de 15 minutes pour faire le point sur vos enjeux actuels ?
+Seriez-vous ouvert à un rapide échange de 15 minutes pour faire le point sur vos besoins actuels ?
 
 Bien cordialement,
-{profile.Name}";
+{profile.Name}
+{title}";
     }
 
     private async Task<JobMatch?> MatchWithGeminiAsync(JobOffer job, UserProfile profile, AppSettings settings, CancellationToken ct)
@@ -450,17 +533,19 @@ Bien cordialement,
 
     private static string BuildMatchingPrompt(JobOffer job, UserProfile profile)
     {
-        return $@"Tu es un expert RH tech et coach pour ingénieurs logiciels cherchant des offres 'invisibles' en full remote mondial depuis la France.
+        var country = string.IsNullOrWhiteSpace(profile.Country) ? "France" : profile.Country;
+        return $@"Tu es un expert RH international et coach carrière cherchant des offres 'invisibles' en full remote mondial depuis {country}.
 Analyse le profil du candidat par rapport à l'offre d'emploi ci-dessous.
 
 PROFIL CANDIDAT :
 - Nom : {profile.Name}
-- Titre : {profile.Title}
+- Titre : {profile.Title} (Domaine : {profile.JobCategory})
+- Pays de résidence : {country}
 - Années d'expérience : {profile.YearsOfExperience} ans
 - Compétences : {profile.PrimarySkills} | {profile.SecondarySkills}
 - Langues : {profile.Languages}
 - Contrats acceptés : {profile.PreferredContracts} (Eligible B2B Contractor: {profile.CanWorkAsContractorB2B})
-- Contrainte géographique : Basé en France, disponible fuseau horaire flexible / CET.
+- Préférences géographiques : {profile.RemoteScopePreference}
 - CV complet :
 {profile.ResumeText}
 
@@ -483,13 +568,14 @@ Retourne STRICTEMENT un objet JSON (sans markdown entourant) avec la structure s
   ""summary"": ""Court résumé en français de l'adéquation"",
   ""strengths"": [""Point fort 1"", ""Point fort 2"", ""Point fort 3""],
   ""missingSkills"": [""Point de vigilance ou compétence manquante 1""],
-  ""administrativeFeasibility"": ""Analyse claire de la faisabilité légale/administrative depuis la France (B2B, EOR type Deel, CDI)"",
+  ""administrativeFeasibility"": ""Analyse claire de la faisabilité légale/administrative depuis {country} (B2B, EOR type Deel, CDI)"",
   ""tailoredPitch"": ""Message d'accroche percutant et professionnel prêt à envoyer au recruteur / CTO (dans la langue de l'annonce)""
 }}";
     }
 
     private static string BuildPitchPrompt(JobOffer job, UserProfile profile, string? customNotes)
     {
+        var country = string.IsNullOrWhiteSpace(profile.Country) ? "France" : profile.Country;
         return $@"Rédige un message de contact direct (cold outreach pitch / email) personnalisé, percutant et courtois pour ce poste :
 Entreprise : {job.Company}
 Poste : {job.Title}
@@ -500,7 +586,7 @@ Candidat :
 Nom : {profile.Name}
 Titre : {profile.Title} ({profile.YearsOfExperience} ans d'expérience)
 Compétences : {profile.PrimarySkills}
-Spécificité : Full remote depuis la France, bilingue anglais, flexible en CDI / EOR ou Freelance B2B.
+Spécificité : Full remote depuis {country} ({profile.Languages}), flexible en CDI / EOR ou Freelance B2B.
 {(string.IsNullOrEmpty(customNotes) ? "" : $"Instructions supplémentaires : {customNotes}")}
 
 Règles :
@@ -637,29 +723,70 @@ Règles :
             profile.YearsOfExperience = 6;
         }
 
-        // Extract title
-        if (textLower.Contains("devops") || textLower.Contains("sre"))
+        // Extract title & job category across multiple professions
+        if (textLower.Contains("data scientist") || textLower.Contains("machine learning") || textLower.Contains("ai engineer") || textLower.Contains("pytorch"))
+        {
+            profile.Title = "Senior Data Scientist / AI Engineer";
+            profile.JobCategory = "data";
+        }
+        else if (textLower.Contains("product manager") || textLower.Contains("product owner") || textLower.Contains("product discovery"))
+        {
+            profile.Title = "Senior Product Manager";
+            profile.JobCategory = "product";
+        }
+        else if (textLower.Contains("product designer") || textLower.Contains("ux/ui") || textLower.Contains("ux designer") || textLower.Contains("figma"))
+        {
+            profile.Title = "Senior UX/UI Product Designer";
+            profile.JobCategory = "design";
+        }
+        else if (textLower.Contains("growth") || textLower.Contains("marketing") || textLower.Contains("seo"))
+        {
+            profile.Title = "Growth & Digital Marketing Manager";
+            profile.JobCategory = "marketing";
+        }
+        else if (textLower.Contains("cybersecurity") || textLower.Contains("secops") || textLower.Contains("pentest"))
+        {
+            profile.Title = "Senior Cybersecurity Engineer";
+            profile.JobCategory = "cybersecurity";
+        }
+        else if (textLower.Contains("devops") || textLower.Contains("sre") || textLower.Contains("cloud architect"))
         {
             profile.Title = "Senior DevOps / Cloud Engineer";
+            profile.JobCategory = "devops";
         }
         else if (textLower.Contains("fullstack") || textLower.Contains("full-stack") || textLower.Contains("full stack"))
         {
             profile.Title = "Senior Fullstack Software Engineer";
+            profile.JobCategory = "software-dev";
         }
         else if (textLower.Contains("backend") || textLower.Contains("back-end"))
         {
             profile.Title = "Backend Software Engineer";
+            profile.JobCategory = "software-dev";
         }
         else if (textLower.Contains("frontend") || textLower.Contains("front-end"))
         {
             profile.Title = "Frontend Software Engineer";
+            profile.JobCategory = "software-dev";
         }
 
-        // Extract primary skills
+        // Extract country if mentioned
+        if (textLower.Contains("canada") || textLower.Contains("montréal") || textLower.Contains("toronto")) profile.Country = "Canada";
+        else if (textLower.Contains("suisse") || textLower.Contains("switzerland") || textLower.Contains("geneva") || textLower.Contains("zurich")) profile.Country = "Switzerland";
+        else if (textLower.Contains("belgique") || textLower.Contains("belgium") || textLower.Contains("bruxelles")) profile.Country = "Belgium";
+        else if (textLower.Contains("united kingdom") || textLower.Contains("london")) profile.Country = "United Kingdom";
+        else if (textLower.Contains("united states") || textLower.Contains("new york") || textLower.Contains("san francisco")) profile.Country = "United States";
+        else if (textLower.Contains("germany") || textLower.Contains("allemagne") || textLower.Contains("berlin")) profile.Country = "Germany";
+        else if (textLower.Contains("spain") || textLower.Contains("espagne") || textLower.Contains("madrid")) profile.Country = "Spain";
+
+        // Extract primary skills across Tech, Data, Product, Design, Marketing & Security
         var knownPrimary = new[]
         {
             ".NET", "C#", "ASP.NET Core", "React", "TypeScript", "JavaScript", "Node.js", "Python",
-            "Go", "Rust", "Java", "Vue", "Angular", "Next.js", "SQL", "PostgreSQL", "SQL Server"
+            "Go", "Rust", "Java", "Vue", "Angular", "Next.js", "SQL", "PostgreSQL", "SQL Server",
+            "PyTorch", "TensorFlow", "LLM", "RAG", "Pandas", "Spark", "Machine Learning",
+            "Figma", "Design Systems", "UX Research", "Prototyping", "Product Discovery", "Roadmap", "Scrum",
+            "SEO", "SEM", "HubSpot", "Google Analytics", "Copywriting", "Pentest", "SIEM", "SOC", "Zero Trust"
         };
         var detectedPrimary = knownPrimary
             .Where(skill => cvText.Contains(skill, StringComparison.OrdinalIgnoreCase))
@@ -672,7 +799,8 @@ Règles :
         // Extract secondary skills
         var knownSecondary = new[]
         {
-            "Docker", "Kubernetes", "Azure", "AWS", "GCP", "Redis", "GraphQL", "TailwindCSS", "CI/CD", "GitHub Actions", "Terraform"
+            "Docker", "Kubernetes", "Azure", "AWS", "GCP", "Redis", "GraphQL", "TailwindCSS", "CI/CD", "GitHub Actions", "Terraform",
+            "Snowflake", "dbt", "Airflow", "Jira", "Notion", "Linear", "Amplitude", "Framer", "CRM"
         };
         var detectedSecondary = knownSecondary
             .Where(skill => cvText.Contains(skill, StringComparison.OrdinalIgnoreCase))

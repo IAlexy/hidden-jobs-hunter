@@ -1,4 +1,4 @@
-import { AppSettings, JobOffer, StatsData, SyncResult, UserProfile } from './types';
+import { AppSettings, JobOffer, ProfileTemplate, StatsData, SyncResult, UserProfile } from './types';
 
 const API_BASE = '/api';
 
@@ -87,6 +87,12 @@ export async function ingestAtsUrl(url: string): Promise<{ url: string; extracte
 export async function fetchProfiles(): Promise<UserProfile[]> {
   const res = await fetch(`${API_BASE}/profiles`);
   if (!res.ok) throw new Error('Erreur lors du chargement des profils');
+  return res.json();
+}
+
+export async function fetchProfileTemplates(): Promise<ProfileTemplate[]> {
+  const res = await fetch(`${API_BASE}/profiles/templates`);
+  if (!res.ok) throw new Error('Erreur lors du chargement des modèles de profils');
   return res.json();
 }
 

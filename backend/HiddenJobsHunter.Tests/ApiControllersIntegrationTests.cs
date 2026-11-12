@@ -157,7 +157,12 @@ public class ApiControllersIntegrationTests
         using var factory = new CustomWebAppFactory();
         using var client = factory.CreateClient();
 
-        // 1. Get seeded default profile (anonymized Demo Profile)
+        // 1. Get seeded default profile (anonymized Demo Profile) and templates
+        var templates = await client.GetFromJsonAsync<JsonElement>("/api/profiles/templates");
+        Assert.True(templates.GetArrayLength() >= 6);
+        Assert.Contains(templates.EnumerateArray(), t => t.GetProperty("id").GetString() == "data");
+        Assert.Contains(templates.EnumerateArray(), t => t.GetProperty("id").GetString() == "design");
+
         var profiles = await client.GetFromJsonAsync<JsonElement>("/api/profiles");
         Assert.Equal(1, profiles.GetArrayLength());
         var defaultProfile = profiles[0];
@@ -165,6 +170,8 @@ public class ApiControllersIntegrationTests
         var defaultName = defaultProfile.GetProperty("name").GetString() ?? string.Empty;
         Assert.Contains("Demo Profile", defaultName, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Alexy", defaultName, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("France", defaultProfile.GetProperty("country").GetString());
+        Assert.Equal("software-dev", defaultProfile.GetProperty("jobCategory").GetString());
 
         // 2. Get active profile
         var activeRes = await client.GetFromJsonAsync<JsonElement>("/api/profiles/active");

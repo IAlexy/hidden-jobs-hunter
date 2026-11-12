@@ -304,6 +304,86 @@ public class AiMatcherServiceTests
         Assert.Equal(9, llmProfile.YearsOfExperience);
         Assert.Equal("750€ TJM", llmProfile.ExpectedSalaryOrTjm);
     }
+
+    [Fact]
+    public async Task EvaluateMatchAsync_MultiDomainAndMultiCountry_ScoresFairlyWithoutDotNetBias()
+    {
+        using var httpClient = new HttpClient(new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
+        var service = new AiMatcherService(httpClient);
+        var settings = new AppSettings { AiProvider = "Heuristic" };
+
+        // 1. Data Scientist in Canada applying to a US/North-America AI role
+        var dataProfileCanada = new UserProfile
+        {
+            Id = 2,
+            Name = "Dr. Claire Data",
+            Title = "Senior Data Scientist & AI Engineer",
+            Country = "Canada",
+            JobCategory = "data",
+            YearsOfExperience = 6,
+            PrimarySkills = "Python, PyTorch, LLM, RAG, Pandas, SQL, Machine Learning",
+            SecondarySkills = "Snowflake, dbt, Docker, AWS",
+            Languages = "English (fluent), Français (native)"
+        };
+
+        var aiJob = new JobOffer
+        {
+            Id = 50,
+            ExternalId = "hn_50",
+            Source = "HackerNews",
+            Title = "Senior Data Scientist / AI Engineer (PyTorch & LLM)",
+            Company = "NorthStarAI",
+            Location = "US / Canada Only",
+            RemoteScope = "US-Only",
+            IsFranceCompatible = false,
+            Description = "Seeking a Senior Data Scientist experienced in Python, PyTorch, LLM, RAG, Pandas, SQL and Snowflake.",
+            Tags = "Python, PyTorch, LLM, Pandas, SQL"
+        };
+
+        var dataMatch = await service.EvaluateMatchAsync(aiJob, dataProfileCanada, settings);
+        Assert.True(dataMatch.TechStackFit >= 85);
+        Assert.Equal(92, dataMatch.RemoteEligibilityFit);
+        Assert.Contains("Canada", dataMatch.AdministrativeFeasibility, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Senior Data Scientist & AI Engineer", dataMatch.TailoredPitch, StringComparison.Ordinal);
+        Assert.Contains("from Canada", dataMatch.TailoredPitch, StringComparison.Ordinal);
+        Assert.DoesNotContain("Fullstack Software Engineer", dataMatch.TailoredPitch, StringComparison.Ordinal);
+
+        // 2. UX/UI Product Designer in Switzerland applying to a European Design role
+        var designerProfileSwiss = new UserProfile
+        {
+            Id = 3,
+            Name = "Marc Design",
+            Title = "Senior UX/UI Product Designer",
+            Country = "Switzerland",
+            JobCategory = "design",
+            YearsOfExperience = 5,
+            PrimarySkills = "Figma, Design Systems, UX Research, Prototyping, Wireframing",
+            SecondarySkills = "Framer, Accessibility",
+            Languages = "Français, Anglais, Allemand",
+            PreferredPitchLanguage = "French"
+        };
+
+        var designJob = new JobOffer
+        {
+            Id = 51,
+            ExternalId = "rem_51",
+            Source = "Remotive",
+            Title = "Lead Product Designer (Figma / Design Systems)",
+            Company = "HelvetiaSaaS",
+            Location = "Remote (Europe)",
+            RemoteScope = "Europe",
+            IsFranceCompatible = true,
+            Description = "Nous cherchons un Product Designer maîtrisant Figma, Design Systems, UX Research et Prototyping pour notre équipe produit.",
+            Tags = "Figma, Design Systems, UX Research"
+        };
+
+        var designMatch = await service.EvaluateMatchAsync(designJob, designerProfileSwiss, settings);
+        Assert.True(designMatch.TechStackFit >= 85);
+        Assert.Equal(95, designMatch.RemoteEligibilityFit);
+        Assert.Contains("Switzerland", designMatch.AdministrativeFeasibility, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Senior UX/UI Product Designer", designMatch.TailoredPitch, StringComparison.Ordinal);
+        Assert.Contains("depuis Switzerland", designMatch.TailoredPitch, StringComparison.Ordinal);
+    }
 }
 
 internal sealed class FakeHttpMessageHandler : HttpMessageHandler

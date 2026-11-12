@@ -6,25 +6,25 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![Sonar Quality](https://img.shields.io/badge/SonarAnalyzer-0%20Warnings-4E9BCD?logo=sonarqube)](./sonar-project.properties)
 
-**HiddenJobs Hunter** est une plateforme web locale de détection d'opportunités d'emploi issues du **« marché invisible »** et du **Full Remote international**, conçue pour les ingénieurs logiciels (profils Fullstack .NET / React, Backend, Frontend, DevOps, Cloud). Elle combine l'agrégation directe sans intermédiaire (Hacker News *Who is hiring?*, ATS d'entreprises, APIs Remote) avec un moteur de **Matching IA hybride (LLM Cloud/Local + Heuristique hors-ligne)** évaluant la compatibilité technique ainsi que la **faisabilité administrative depuis la France** (CDI, Portage/EOR, Freelance B2B).
+**HiddenJobs Hunter** est une plateforme web universelle de détection d'opportunités d'emploi issues du **« marché invisible »** et du **Full Remote international**, conçue pour **tous les métiers du numérique et de la tech** (*Software Engineering, Data Science & IA, DevOps & Cloud, Product Management, UX/UI Design, Growth & Marketing, Cybersécurité*) et **quel que soit votre pays de résidence** (*France, Canada, Suisse, Belgique, Royaume-Uni, États-Unis, Allemagne, Espagne...*). Elle combine l'agrégation directe sans intermédiaire (Hacker News *Who is hiring?*, ATS d'entreprises, APIs Remote multi-catégories) avec un moteur de **Matching IA hybride (LLM Cloud/Local + Heuristique hors-ligne)** évaluant l'adéquation métier ainsi que la **faisabilité administrative internationale** (CDI local, Portage/EOR type Deel/Remote.com, Freelance/Contractor B2B).
 
 ---
 
 ## ✨ Fonctionnalités Clés
 
-- **📡 Radar du Marché Invisible (Zéro Intermédiaire)** :
-  - **Hacker News « Ask HN: Who is hiring? »** : Extraction mensuelle des offres publiées directement par les **CTOs, fondateurs et VP Engineering**, avec détection automatique des emails de contact direct et contournement des filtres ATS classiques.
+- **📡 Radar du Marché Invisible (Zéro Intermédiaire & Multi-Métiers)** :
+  - **Hacker News « Ask HN: Who is hiring? »** : Extraction mensuelle des offres publiées directement par les **CTOs, fondateurs et VP**, avec détection automatique des emails de contact direct et contournement des filtres ATS classiques.
   - **Connecteurs & Scraper d'ATS Directs (`CustomAtsProvider`)** : Aspiration à la volée des boards **Greenhouse**, **Lever**, **Ashby** et des pages carrières HTML génériques à partir d'une simple URL.
-  - **APIs Remote Internationales (`Remotive`, `Jobicy`)** : Flux d'ingénierie logicielle 100 % télétravail filtrés par zone géographique (*Worldwide*, *Europe / CET*, *US-Only*).
-- **🧠 Matching IA & Faisabilité Administrative depuis la France (`AiMatcherService`)** :
-  - Calcul du **Score Global de Match (0–100 %)** combinant l'adéquation de la stack technique (`TechStackFit`) et l'éligibilité géographique (`RemoteEligibilityFit`).
-  - **Analyse de faisabilité légale/contractuelle depuis la France** : Identifie si le poste est accessible en **CDI** (entité locale), via **EOR / Portage salarial** (*Deel, Remote.com, Oyster*) ou en **contrat Freelance / Contractor B2B** (facturation directe internationale sans contrainte de visa).
-  - Identification automatique des **points forts** et des **points de vigilance / compétences manquantes**.
+  - **APIs Remote Multi-Domaines (`Remotive`, `Jobicy`)** : Flux 100 % télétravail adaptés dynamiquement à votre catégorie de métier (*Software Dev, Data/IA, DevOps, Product, Design, Marketing, Sales, Cybersecurity*) et filtrés par zone géographique (*Worldwide*, *Europe / CET*, *North America*).
+- **🧠 Matching IA Universel & Faisabilité Internationale (`AiMatcherService`)** :
+  - Calcul équitable et agnostique du **Score Global de Match (0–100 %)** combinant l'adéquation des compétences métier (`TechStackFit`) et l'éligibilité géographique (`RemoteEligibilityFit`).
+  - **Analyse de faisabilité légale/contractuelle selon votre pays de résidence** : Identifie si le poste est accessible en **CDI** (entité locale), via **EOR / Portage salarial** (*Deel, Remote.com, Oyster*) ou en **contrat Freelance / Contractor B2B** (facturation directe internationale).
+  - Identification automatique des **points forts** et des **points de vigilance / compétences manquantes** sur plus de 60 compétences multi-domaines (Tech, Data/IA, Produit, Design, Growth, Cyber).
 - **✉️ Générateur de Pitch d'Approche Directe (FR / EN)** :
-  - Rédaction de messages de *cold outreach* personnalisés et concis (en français ou en anglais selon la langue de l'annonce) prêts à être envoyés directement au CTO ou recruteur.
-- **👥 Gestion Multi-Profils & Analyseur de CV IA** :
-  - Création et bascule instantanée entre plusieurs profils (ex. *Fullstack .NET / React*, *Backend Go / Rust*, *DevOps Cloud*).
-  - Extraction automatique d'un CV brut (`POST /api/profiles/parse-resume`) renseignant le titre, les années d'expérience, les compétences clés/secondaires et les langues.
+  - Rédaction de messages de *cold outreach* personnalisés et concis (en français ou en anglais selon la langue de l'annonce) adaptés dynamiquement à votre titre professionnel et votre pays.
+- **👥 Gestion Multi-Profils, Templates Métiers 1-Clic & Analyseur de CV IA** :
+  - **Modèles de métiers prêts à l'emploi en 1 clic (`GET /api/profiles/templates`)** : Démarrez en 5 secondes avec un profil pré-configuré (*Fullstack Software Engineer*, *Data Scientist / AI Engineer*, *DevOps / Cloud Architect*, *Product Manager*, *UX/UI Product Designer*, *Growth & Digital Marketing*, *Cybersecurity / SecOps Engineer*).
+  - Extraction automatique d'un CV brut (`POST /api/profiles/parse-resume`) renseignant le titre, le domaine, le pays, les années d'expérience, les compétences clés/secondaires et les langues.
 - **🔌 Architecture IA Hybride (100 % Hors-Ligne par défaut)** :
   - Fonctionne **immédiatement sans aucune clé API** grâce au moteur algorithmique heuristique local.
   - Supporte **Google Gemini** (`gemini-2.5-flash`), **OpenAI** (`gpt-4o-mini`) et **Ollama** (modèles locaux `llama3`, `mistral`) avec basculement automatique (*fallback*) sur le moteur heuristique en cas d'indisponibilité réseau.
@@ -156,6 +156,7 @@ npm run build
 | Méthode | Route | Description |
 | :--- | :--- | :--- |
 | `GET` | `/api/profiles` | Liste tous les profils utilisateurs avec leurs compteurs de matchs. |
+| `GET` | `/api/profiles/templates` | Retourne les modèles de profils prêts à l'emploi en 1 clic (Software Dev, Data/IA, DevOps, Product, Design, Marketing, Cybersecurity). |
 | `GET` | `/api/profiles/active` | Récupère le profil utilisateur actuellement actif. |
 | `GET` | `/api/profiles/{id}` | Récupère les détails complets d'un profil. |
 | `POST` | `/api/profiles` | Crée un nouveau profil candidat. |

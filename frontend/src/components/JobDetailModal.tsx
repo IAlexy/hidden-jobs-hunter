@@ -101,7 +101,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               </span>
               {job.isFranceCompatible && (
                 <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  ✓ Éligible France
+                  ✓ Compatible Remote / EOR
                 </span>
               )}
             </div>
@@ -204,7 +204,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
 
                 <div>
                   <div className="flex justify-between text-slate-300 mb-1">
-                    <span>Éligibilité Remote & France</span>
+                    <span>Éligibilité Remote & Localisation</span>
                     <strong className="text-teal-400">{match.remoteEligibilityFit}%</strong>
                   </div>
                   <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -260,12 +260,12 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 )}
               </div>
 
-              {/* Administrative Feasibility from France */}
+              {/* Administrative Feasibility */}
               {match.administrativeFeasibility && (
                 <div className="bg-blue-950/20 border border-blue-800/30 rounded-lg p-3">
                   <h4 className="text-xs font-semibold text-blue-300 mb-1 flex items-center gap-1.5">
                     <Globe className="h-3.5 w-3.5 text-blue-400" />
-                    Faisabilité administrative & contractuelle (depuis la France)
+                    Faisabilité administrative & contractuelle (B2B / EOR / CDI)
                   </h4>
                   <p className="text-xs text-slate-300 leading-relaxed">
                     {match.administrativeFeasibility}

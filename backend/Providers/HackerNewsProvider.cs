@@ -210,7 +210,8 @@ public class HackerNewsProvider : IJobProvider
             ".NET", "C#", "React", "TypeScript", "JavaScript", "ASP.NET", "Next.js", "Node.js", "Node",
             "Python", "Go", "Golang", "Rust", "Vue", "Angular", "SQL", "PostgreSQL", "MongoDB", "Redis",
             "Docker", "Kubernetes", "Azure", "AWS", "GCP", "GraphQL", "REST", "Fullstack", "Backend", "Frontend",
-            "Tailwind", "Kafka", "Microservices"
+            "Tailwind", "Kafka", "Microservices", "PyTorch", "TensorFlow", "LLM", "Pandas", "Spark",
+            "Figma", "Product", "Design", "Growth", "SEO", "Security", "Pentest", "Terraform"
         };
 
         var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

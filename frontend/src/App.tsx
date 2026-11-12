@@ -285,7 +285,7 @@ export function App() {
                       setSearch(e.target.value);
                       setPage(1);
                     }}
-                    placeholder="Recherche par poste, entreprise, stack (.NET, React, C#, Azure, TS...)..."
+                    placeholder="Recherche par poste, entreprise, compétences (Tech, Data/IA, Produit, Design, Cloud...)..."
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
                   />
                 </div>
@@ -376,7 +376,7 @@ export function App() {
                     </select>
                   </div>
 
-                  {/* France Compatible Toggle */}
+                  {/* Location / EOR Compatible Toggle */}
                   <label className="flex items-center gap-2 bg-slate-800/60 hover:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700/60 cursor-pointer text-slate-300">
                     <input
                       type="checkbox"
@@ -387,7 +387,7 @@ export function App() {
                       }}
                       className="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0"
                     />
-                    <span>Uniquement compatibles depuis la France</span>
+                    <span>Compatible Localisation / EOR</span>
                   </label>
 
                 </div>

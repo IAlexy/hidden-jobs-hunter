@@ -43,6 +43,8 @@ export interface UserProfile {
   name: string;
   isActive: boolean;
   title: string;
+  country?: string;
+  jobCategory?: string;
   yearsOfExperience: number;
   preferredContracts: string;
   remoteScopePreference: string;
@@ -56,6 +58,18 @@ export interface UserProfile {
   updatedAt?: string;
   matchCount?: number;
   highMatchCount?: number;
+}
+
+export interface ProfileTemplate {
+  id: string;
+  name: string;
+  title: string;
+  jobCategory: string;
+  yearsOfExperience: number;
+  primarySkills: string;
+  secondarySkills: string;
+  preferredContracts: string;
+  expectedSalaryOrTjm: string;
 }
 
 export interface AppSettings {

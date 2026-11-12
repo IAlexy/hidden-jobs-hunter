@@ -297,7 +297,12 @@ public class CustomAtsProvider : IJobProvider
 
     private static string ExtractTechTags(string text)
     {
-        var keywords = new[] { ".NET", "C#", "React", "TypeScript", "JavaScript", "ASP.NET", "Node", "Python", "Go", "Rust", "Azure", "AWS", "SQL", "Docker" };
+        var keywords = new[]
+        {
+            ".NET", "C#", "React", "TypeScript", "JavaScript", "ASP.NET", "Node", "Python", "Go", "Rust",
+            "Azure", "AWS", "GCP", "SQL", "Docker", "Kubernetes", "Terraform", "PyTorch", "TensorFlow", "LLM",
+            "Pandas", "Spark", "Figma", "UX", "Product", "Scrum", "SEO", "Growth", "Security"
+        };
         var matches = keywords.Where(k => text.Contains(k, StringComparison.OrdinalIgnoreCase)).Take(6);
         return string.Join(", ", matches);
     }

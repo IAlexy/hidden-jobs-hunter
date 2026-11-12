@@ -13,6 +13,10 @@ public class UserProfile
     
     public string Title { get; set; } = "Fullstack Software Engineer";
     
+    public string Country { get; set; } = "France";
+    
+    public string JobCategory { get; set; } = "software-dev";
+    
     public int YearsOfExperience { get; set; } = 5;
     
     // Comma-separated: "CDI,Freelance/Contractor,Temps partiel"

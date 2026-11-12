@@ -17,9 +17,10 @@ public class RemotiveProvider : IJobProvider
     private readonly HttpClient _httpClient;
 
     public string Id => "Remotive";
-    public string Name => "Remotive (API Remote Tech)";
-    public string Description => "Offres 100% remote en développement logiciel, filtrables mondialement / Europe.";
+    public string Name => "Remotive (API Remote Multi-Métiers)";
+    public string Description => "Offres 100% remote (Tech, Data, Produit, Design, Marketing, Cyber), filtrables mondialement / Europe.";
     public bool IsEnabledByDefault => true;
+    public string Category { get; set; } = "software-dev";
 
     public RemotiveProvider(HttpClient httpClient)
     {
@@ -27,13 +28,18 @@ public class RemotiveProvider : IJobProvider
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("HiddenJobsHunter/1.0");
     }
 
-    public async Task<List<JobOffer>> FetchJobsAsync(int limit = 50, CancellationToken ct = default)
+    public Task<List<JobOffer>> FetchJobsAsync(int limit = 50, CancellationToken ct = default)
+        => FetchJobsAsync(limit, Category, ct);
+
+    public async Task<List<JobOffer>> FetchJobsAsync(int limit, string? category, CancellationToken ct = default)
     {
         var jobs = new List<JobOffer>();
 
         try
         {
-            var url = $"https://remotive.com/api/remote-jobs?category=software-dev&limit={limit}";
+            var mappedCategory = MapRemotiveCategory(category);
+            var categoryQuery = string.IsNullOrEmpty(mappedCategory) ? "" : $"category={mappedCategory}&";
+            var url = $"https://remotive.com/api/remote-jobs?{categoryQuery}limit={limit}";
             using var response = await _httpClient.GetAsync(url, ct);
             if (!response.IsSuccessStatusCode) return jobs;
 
@@ -115,6 +121,22 @@ public class RemotiveProvider : IJobProvider
         }
 
         return jobs;
+    }
+
+    private static string MapRemotiveCategory(string? category)
+    {
+        return (category?.Trim().ToLowerInvariant()) switch
+        {
+            null or "" or "software-dev" => "software-dev",
+            "all" => "",
+            "data" => "data",
+            "devops" or "cybersecurity" => "devops",
+            "product" => "product",
+            "design" => "design",
+            "marketing" => "marketing",
+            "sales" => "sales-business",
+            _ => category.Trim().ToLowerInvariant()
+        };
     }
 
     private static string CleanHtml(string html)
